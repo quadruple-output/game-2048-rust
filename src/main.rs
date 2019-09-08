@@ -1,5 +1,6 @@
-use rand::Rng;
 use std::io;
+mod board;
+use board::*;
 
 fn main() {
     let mut board = Board::new();
@@ -16,37 +17,9 @@ fn main() {
     }
 }
 
-pub struct Board {
-    grid: [[Square; 4]; 4],
-}
-
-#[derive(Copy, Clone, Debug)]
-enum Square {
-    Empty,
-    Value(u16),
-}
-
 pub struct ConsoleView {}
 
 pub struct ConsoleController {}
-
-impl Board {
-    pub fn new() -> Board {
-        Board {
-            grid: [[Square::Empty; 4]; 4],
-        }
-    }
-
-    pub fn restart(&mut self) {
-        self.grid = [[Square::Empty; 4]; 4];
-    }
-
-    pub fn new_tile(&mut self) {
-        let x = rand::thread_rng().gen_range(0, 4);
-        let y = rand::thread_rng().gen_range(0, 4);
-        self.grid[x][y] = Square::Value(2);
-    }
-}
 
 impl ConsoleView {
     pub fn new() -> ConsoleView {
