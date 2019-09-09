@@ -12,7 +12,7 @@ fn main() {
     let view = ConsoleView::new();
     let controller = ConsoleController::new();
 
-    board.new_tile();
+    controller.initialize_game(&mut board);
     loop {
         view.show(&board);
         match controller.effectuate(&mut board) {

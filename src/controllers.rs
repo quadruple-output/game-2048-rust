@@ -9,6 +9,10 @@ impl ConsoleController {
         ConsoleController {}
     }
 
+    pub fn initialize_game(&self, board: &mut Board) {
+        board.new_tile();
+    }
+
     pub fn effectuate(&self, board: &mut Board) -> GameState {
         match self.read_command() {
             Command::Right | Command::Left | Command::Up | Command::Down => {
