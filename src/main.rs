@@ -1,13 +1,11 @@
-use std::io;
-
+mod controllers;
 mod game;
 mod views;
-mod controllers;
 
+use controllers::ConsoleController;
 use game::Board;
 use game::GameState;
 use views::ConsoleView;
-use controllers::ConsoleController;
 
 fn main() {
     let mut board = Board::new();
@@ -23,4 +21,3 @@ fn main() {
         }
     }
 }
-
