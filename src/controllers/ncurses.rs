@@ -13,7 +13,7 @@ impl Controller {
 
     #[allow(dead_code)]
     pub fn initialize_game(&self, board: &mut Board) {
-        board.new_tile();
+        board.new_tile(); // TODO: should be inherited
     }
 
     #[allow(dead_code)]
