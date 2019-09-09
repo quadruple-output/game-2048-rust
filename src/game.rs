@@ -1,5 +1,19 @@
 use rand::Rng;
 
+pub struct Game {
+    pub board: Board,
+    state: GameState,
+}
+
+pub enum Command {
+    New,
+    Quit,
+    Right,
+    Left,
+    Up,
+    Down,
+}
+
 pub enum GameState {
     Running,
     Finished,
@@ -23,13 +37,45 @@ impl Board {
         }
     }
 
-    pub fn restart(&mut self) {
+    pub fn initialize(&mut self) {
         self.grid = [[Square::Empty; 4]; 4];
+        self.new_tile();
     }
 
     pub fn new_tile(&mut self) {
         let x = rand::thread_rng().gen_range(0, 4);
         let y = rand::thread_rng().gen_range(0, 4);
         self.grid[x][y] = Square::Value(2);
+    }
+}
+
+impl Game {
+    pub fn new() -> Game {
+        let mut new_game = Game {
+            state: GameState::Running,
+            board: Board::new(),
+        };
+        new_game.restart();
+        new_game
+    }
+
+    pub fn execute_command(&mut self, command: &Command) {
+        match command {
+            Command::Right | Command::Left | Command::Up | Command::Down => {
+                self.board.new_tile();
+            }
+            Command::New => self.restart(),
+            Command::Quit => {
+                self.state = GameState::Finished;
+            }
+        }
+    }
+
+    pub fn state(&self) -> &GameState {
+        &self.state
+    }
+
+    fn restart(&mut self) {
+        self.board.initialize();
     }
 }
