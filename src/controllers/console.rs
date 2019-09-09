@@ -15,20 +15,20 @@ impl Controller {
         let mut cmd;
         loop {
             cmd = String::new();
-            io::stdin().read_line(&mut cmd).unwrap();
-            let some_command = match cmd.to_lowercase().as_str().trim() {
-                "w" => Some(Command::Up),
-                "a" => Some(Command::Left),
-                "s" => Some(Command::Down),
-                "d" => Some(Command::Right),
-                "n" => Some(Command::New),
-                "q" => Some(Command::Quit),
-                _ => None,
-            };
-            if let Some(command) = some_command {
-                break command;
-            } else {
-                println!("what?");
+            match io::stdin().read_line(&mut cmd) {
+                Ok(_) => match cmd.to_lowercase().as_str().trim() {
+                    "w" => break Command::Up,
+                    "a" => break Command::Left,
+                    "s" => break Command::Down,
+                    "d" => break Command::Right,
+                    "n" => break Command::New,
+                    "q" => break Command::Quit,
+                    _ => println!("what?"), // restarts the loop
+                },
+                Err(msg) => {
+                    println!("I/O Error on STDIN: {}", msg);
+                    break Command::Quit;
+                }
             }
         }
     }
