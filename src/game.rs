@@ -5,17 +5,16 @@ pub enum GameState {
     Finished,
 }
 
-
 pub struct Board {
     pub grid: [[Square; 4]; 4],
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)] // needed for easy Board initialization
+#[derive(Debug)] // only needed for console view. TODO: remove or define in views.rs
 pub enum Square {
     Empty,
     Value(u16),
 }
-
 
 impl Board {
     pub fn new() -> Board {

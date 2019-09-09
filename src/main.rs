@@ -14,7 +14,7 @@ fn main() {
 
     board.new_tile();
     loop {
-        view.show_board(&board);
+        view.show(&board);
         match controller.effectuate(&mut board) {
             GameState::Finished => break,
             GameState::Running => (),
