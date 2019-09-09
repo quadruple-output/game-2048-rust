@@ -1,6 +1,6 @@
 use std::io;
-mod board;
-use board::*;
+mod game;
+use game::Board;
 
 fn main() {
     let mut board = Board::new();
