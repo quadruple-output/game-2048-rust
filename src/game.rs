@@ -59,7 +59,7 @@ impl Game {
         new_game
     }
 
-    pub fn execute_command(&mut self, command: &Command) {
+    pub fn execute(&mut self, command: &Command) {
         match command {
             Command::Right | Command::Left | Command::Up | Command::Down => {
                 self.board.new_tile();

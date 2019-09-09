@@ -11,10 +11,8 @@ fn main() {
 
     loop {
         view.show(&game);
-        let command = controller.receive_command();
-        game.execute_command(&command); // TODO: should be 'game'
+        game.execute(&controller.receive_command());
         match game.state() {
-            // TODO: should be 'game'
             Finished => break,
             Running => (),
         }
