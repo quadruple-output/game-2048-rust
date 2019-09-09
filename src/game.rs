@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::distributions::{IndependentSample, Range};
 
 pub struct Game {
     pub board: Board,
@@ -20,31 +20,37 @@ pub enum GameState {
 }
 
 pub struct Board {
+    pub size: u8,
     pub grid: [[Square; 4]; 4],
+    rand_range: Range<usize>, // array indexes must be typed 'usize'
+    rng: rand::ThreadRng,
 }
 
 #[derive(Copy, Clone)] // needed for easy Board initialization
-#[derive(Debug)] // only needed for console view. TODO: remove or define in views.rs
+#[derive(Debug)] // only needed for console view. TODO: remove or define in views/console.rs, if possible
 pub enum Square {
     Empty,
     Value(u16),
 }
 
 impl Board {
-    pub fn new() -> Board {
+    fn new() -> Board {
         Board {
+            size: 4, // TODO: to make this a variable, the type of 'grid' needs to be non-array
             grid: [[Square::Empty; 4]; 4],
+            rand_range: Range::new(0, 4),
+            rng: rand::thread_rng(),
         }
     }
 
-    pub fn initialize(&mut self) {
+    fn initialize(&mut self) {
         self.grid = [[Square::Empty; 4]; 4];
         self.new_tile();
     }
 
-    pub fn new_tile(&mut self) {
-        let x = rand::thread_rng().gen_range(0, 4);
-        let y = rand::thread_rng().gen_range(0, 4);
+    fn new_tile(&mut self) {
+        let x = self.rand_range.ind_sample(&mut self.rng);
+        let y = self.rand_range.ind_sample(&mut self.rng);
         self.grid[x][y] = Square::Value(2);
     }
 }
