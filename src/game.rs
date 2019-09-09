@@ -1,5 +1,11 @@
 use rand::Rng;
 
+pub enum GameState {
+    Running,
+    Finished,
+}
+
+
 pub struct Board {
     pub grid: [[Square; 4]; 4],
 }
