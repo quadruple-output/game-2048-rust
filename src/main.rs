@@ -2,22 +2,19 @@ mod controllers;
 mod game;
 mod views;
 
-use controllers::ConsoleController;
-use game::Board;
-use game::GameState;
-use views::ConsoleView;
+use game::GameState::*; // Finished and Running
 
 fn main() {
-    let mut board = Board::new();
-    let view = ConsoleView::new();
-    let controller = ConsoleController::new();
+    let mut board = game::Board::new();
+    let view = views::ConsoleView::new();
+    let controller = controllers::ConsoleController::new();
 
     controller.initialize_game(&mut board);
     loop {
         view.show(&board);
         match controller.effectuate(&mut board) {
-            GameState::Finished => break,
-            GameState::Running => (),
+            Finished => break,
+            Running => (),
         }
     }
 }

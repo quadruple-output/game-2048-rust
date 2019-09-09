@@ -1,12 +1,12 @@
+use crate::controllers::Command; // TODO: can I use a relative path here? how?
+use crate::game::*;
 use std::io;
 
-use crate::game::*;
+pub struct Controller {}
 
-pub struct ConsoleController {}
-
-impl ConsoleController {
-    pub fn new() -> ConsoleController {
-        ConsoleController {}
+impl Controller {
+    pub fn new() -> Controller {
+        Controller {}
     }
 
     pub fn initialize_game(&self, board: &mut Board) {
@@ -41,14 +41,4 @@ impl ConsoleController {
             _ => Command::Nop,
         }
     }
-}
-
-enum Command {
-    Nop,
-    Right,
-    Left,
-    Up,
-    Down,
-    New,
-    Quit,
 }

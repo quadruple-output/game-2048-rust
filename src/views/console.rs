@@ -1,10 +1,10 @@
 use crate::game::Board;
 
-pub struct ConsoleView {}
+pub struct View {}
 
-impl ConsoleView {
-    pub fn new() -> ConsoleView {
-        ConsoleView {}
+impl View {
+    pub fn new() -> View {
+        View {}
     }
 
     pub fn show(&self, board: &Board) {
