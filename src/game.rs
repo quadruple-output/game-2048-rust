@@ -1,4 +1,4 @@
-use rand::distributions::{IndependentSample, Range};
+use rand::distributions::IndependentSample;
 
 pub struct Game {
     pub board: Board,
@@ -20,9 +20,9 @@ pub enum GameState {
 }
 
 pub struct Board {
-    pub size: u8,
+    pub size: usize, // used as array index -> must be typed 'usize'
     pub grid: [[Square; 4]; 4],
-    rand_range: Range<usize>, // array indexes must be typed 'usize'
+    rand_range: rand::distributions::Range<usize>, // array indexes must be typed 'usize'
     rng: rand::ThreadRng,
 }
 
@@ -38,7 +38,7 @@ impl Board {
         Board {
             size: 4, // TODO: to make this a variable, the type of 'grid' needs to be non-array
             grid: [[Square::Empty; 4]; 4],
-            rand_range: Range::new(0, 4),
+            rand_range: rand::distributions::Range::new(0, 4),
             rng: rand::thread_rng(),
         }
     }

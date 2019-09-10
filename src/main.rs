@@ -2,12 +2,14 @@ mod controllers;
 mod game;
 mod views;
 
-use game::GameState::*; // Finished and Running
+use game::{Game, GameState::*}; // '::Finished' and '::Running'
 
 fn main() {
-    let mut game = game::Game::new();
-    let view = views::ConsoleView::new();
-    let controller = controllers::ConsoleController::new();
+    let mut game = Game::new();
+    // let view = views::ConsoleView::new();
+    // let controller = controllers::ConsoleController::new();
+    let view = views::NCursesView::new();
+    let controller = controllers::NCursesController::new();
 
     loop {
         view.show(&game);
