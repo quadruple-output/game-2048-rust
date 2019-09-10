@@ -1,5 +1,5 @@
 use crate::game::{Board, Game, Square};
-use ncurses::*;
+use ncurses as nc;
 
 //
 // NCurses HOWTO: http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
@@ -11,36 +11,35 @@ pub struct View {}
 impl View {
     #[allow(dead_code)]
     pub fn new() -> View {
-        initscr();
+        nc::initscr();
         View {}
     }
 
     #[allow(dead_code)]
-    #[allow(dead_code)]
     pub fn show(&self, game: &Game) {
         self.show_board(&game.board);
-        refresh();
+        nc::refresh();
     }
 
     fn show_board(&self, board: &Board) {
         for x in 0..board.size {
             for y in 0..board.size {
-                mv(y as i32, (x * 6) as i32);
+                nc::mv(y as i32, (x * 6) as i32);
                 let label = match board.grid[x][y] {
                     Square::Empty => String::new(),
                     Square::Value(value) => value.to_string(),
                 };
-                addstr(&label);
+                nc::addstr(&label);
             }
-            addstr("");
+            nc::addstr("");
         }
     }
 }
 
 impl Drop for View {
     fn drop(&mut self) {
-        endwin();
-        println!("fin.");
+        nc::endwin();
+        println!("fin de ncurses.");
         // TODO: register endwin on CTRL-C
     }
 }

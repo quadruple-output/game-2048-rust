@@ -22,7 +22,8 @@ pub enum GameState {
 pub struct Board {
     pub size: usize, // used as array index -> must be typed 'usize'
     pub grid: [[Square; 4]; 4],
-    rand_range: rand::distributions::Range<usize>, // array indexes must be typed 'usize'
+    rand_range_grid: rand::distributions::Range<usize>, // array indexes must be typed 'usize'
+    rand_range_10: rand::distributions::Range<u8>,
     rng: rand::ThreadRng,
 }
 
@@ -38,7 +39,8 @@ impl Board {
         Board {
             size: 4, // TODO: to make this a variable, the type of 'grid' needs to be non-array
             grid: [[Square::Empty; 4]; 4],
-            rand_range: rand::distributions::Range::new(0, 4),
+            rand_range_grid: rand::distributions::Range::new(0, 4),
+            rand_range_10: rand::distributions::Range::new(0, 10),
             rng: rand::thread_rng(),
         }
     }
@@ -49,9 +51,17 @@ impl Board {
     }
 
     fn new_tile(&mut self) {
-        let x = self.rand_range.ind_sample(&mut self.rng);
-        let y = self.rand_range.ind_sample(&mut self.rng);
-        self.grid[x][y] = Square::Value(2);
+        let x = self.random_grid_size();
+        let y = self.random_grid_size();
+        self.grid[x][y] = Square::Value(if self.ten_percent_chance() { 4 } else { 2 });
+    }
+
+    fn ten_percent_chance(&mut self) -> bool {
+        self.rand_range_10.ind_sample(&mut self.rng) == 0
+    }
+
+    fn random_grid_size(&mut self) -> usize {
+        self.rand_range_grid.ind_sample(&mut self.rng)
     }
 }
 
