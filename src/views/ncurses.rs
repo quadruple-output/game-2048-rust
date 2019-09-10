@@ -12,11 +12,13 @@ impl View {
     #[allow(dead_code)]
     pub fn new() -> View {
         nc::initscr();
+        nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
         View {}
     }
 
     #[allow(dead_code)]
     pub fn show(&self, game: &Game) {
+        nc::clear();
         self.show_board(&game.board);
         nc::refresh();
     }
