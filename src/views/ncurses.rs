@@ -3,6 +3,7 @@ use ncurses as nc;
 
 //
 // NCurses HOWTO: http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
+// man pages: man 3x <function>
 //
 
 #[allow(dead_code)]
@@ -13,27 +14,48 @@ impl View {
     pub fn new() -> View {
         nc::initscr();
         nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+        nc::refresh(); // required for first wrefresh to work
         View {}
     }
 
     #[allow(dead_code)]
     pub fn show(&self, game: &Game) {
-        nc::clear();
-        self.show_board(&game.board);
+        nc::erase(); // like clear(), but without implicit refresh()
+        let mut screen_width = 0;
+        let mut screen_height = 0;
+        nc::getmaxyx(nc::stdscr(), &mut screen_height, &mut screen_width);
+        let mut win_height = screen_height - 4;
+        let mut win_width = screen_width - 4;
+        // calculate height of window for optimal symmetry (height-2-4)%5 == 0
+        win_height =
+            win_height - (win_height - 2 - game.board.size as i32) % game.board.size as i32; // -2 for borders
+        win_width = win_width - (win_width - 2 - game.board.size as i32) % game.board.size as i32;
+        let board_win = nc::subwin(nc::stdscr(), win_height, win_width, 2, 2);
+        nc::box_(board_win, 0, 0);
+        self.show_board_in_window(&game.board, board_win);
         nc::refresh();
+        nc::delwin(board_win);
     }
 
-    fn show_board(&self, board: &Board) {
+    fn show_board_in_window(&self, board: &Board, window: nc::WINDOW) {
+        let mut win_width = 0;
+        let mut win_height = 0;
+        nc::getmaxyx(window, &mut win_height, &mut win_width);
+        win_height -= 2; // -2 chars for border
+        win_width -= 2; // -2 chars for border
         for x in 0..board.size {
             for y in 0..board.size {
-                nc::mv(y as i32, (x * 6) as i32);
+                nc::wmove(
+                    window,
+                    1 + ((y as i32 * win_height + win_height / 2) / board.size as i32),
+                    1 + ((x as i32 * win_width + win_width / 2) / board.size as i32),
+                );
                 let label = match board.grid[x][y] {
                     Square::Empty => String::new(),
                     Square::Value(value) => value.to_string(),
                 };
-                nc::addstr(&label);
+                nc::waddstr(window, &label);
             }
-            nc::addstr("");
         }
     }
 }
