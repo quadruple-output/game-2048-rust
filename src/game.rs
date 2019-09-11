@@ -54,6 +54,7 @@ impl Board {
     fn new_tile(&mut self) {
         let x = self.random_grid_size();
         let y = self.random_grid_size();
+        // TODO: avoid non-empty squares
         self.grid[x][y] = Square::Value(if self.ten_percent_chance() { 4 } else { 2 });
     }
 
@@ -63,6 +64,67 @@ impl Board {
 
     fn random_grid_size(&mut self) -> usize {
         self.rand_range_grid.ind_sample(&mut self.rng)
+    }
+
+    fn shift_left(&mut self) {
+        for y in 0..self.size {
+            // todo: parallel execution
+            self.condense(&mut Stepper::new([0, y], [1, 0], [self.size - 1, y]));
+        }
+    }
+
+    fn shift_right(&mut self) {
+        for y in 0..self.size {
+            // todo: parallel execution
+            self.condense(&mut Stepper::new([self.size - 1, y], [-1, 0], [0, y]));
+        }
+    }
+
+    fn shift_up(&mut self) {
+        for x in 0..self.size {
+            // todo: parallel execution
+            self.condense(&mut Stepper::new([x, 0], [0, 1], [x, self.size - 1]));
+        }
+    }
+
+    fn shift_down(&mut self) {
+        for x in 0..self.size {
+            // todo: parallel execution
+            self.condense(&mut Stepper::new([x, self.size - 1], [0, -1], [x, 0]));
+        }
+    }
+
+    fn condense(&mut self, stepper: &mut Stepper) {
+        let mut target = stepper.position();
+        let mut inspected;
+        while !stepper.finished() {
+            stepper.advance();
+            inspected = stepper.position();
+            match self.grid[target[0]][target[1]] {
+                Square::Empty => match self.grid[inspected[0]][inspected[1]] {
+                    Square::Empty => {} // just advance
+                    Square::Value(v_inspect) => {
+                        self.grid[target[0]][target[1]] = Square::Value(v_inspect);
+                        self.grid[inspected[0]][inspected[1]] = Square::Empty;
+                        // and advance
+                    }
+                },
+                Square::Value(v_target) => match self.grid[inspected[0]][inspected[1]] {
+                    Square::Empty => {} // just advance
+                    Square::Value(v_inspect) => {
+                        if v_target == v_inspect {
+                            self.grid[target[0]][target[1]] = Square::Value(v_target + v_inspect);
+                            self.grid[inspected[0]][inspected[1]] = Square::Empty;
+                        } else {
+                            // TODO: move inspected adjacent to target
+                        }
+                        stepper.advance_position(&mut target);
+                        // and advance inspected
+                    }
+                },
+            }
+        }
+        // TODO: write some tests
     }
 }
 
@@ -78,14 +140,13 @@ impl Game {
 
     pub fn execute(&mut self, command: &Command) {
         match command {
-            Command::Nop => (),
-            Command::Right | Command::Left | Command::Up | Command::Down => {
-                self.board.new_tile();
-            }
+            Command::Nop => (), // screen refresh only
+            Command::Left => self.shift_left(),
+            Command::Right => self.shift_right(),
+            Command::Up => self.shift_up(),
+            Command::Down => self.shift_down(),
             Command::New => self.restart(),
-            Command::Quit => {
-                self.state = GameState::Finished;
-            }
+            Command::Quit => self.state = GameState::Finished,
         }
     }
 
@@ -95,5 +156,58 @@ impl Game {
 
     fn restart(&mut self) {
         self.board.initialize();
+    }
+
+    fn shift_left(&mut self) {
+        self.board.shift_left();
+        self.board.new_tile();
+    }
+
+    fn shift_right(&mut self) {
+        self.board.shift_right();
+        self.board.new_tile();
+    }
+
+    fn shift_up(&mut self) {
+        self.board.shift_up();
+        self.board.new_tile();
+    }
+
+    fn shift_down(&mut self) {
+        self.board.shift_down();
+        self.board.new_tile();
+    }
+}
+
+struct Stepper {
+    position: [usize; 2],
+    step: [i8; 2],
+    end: [usize; 2],
+}
+
+impl Stepper {
+    fn new(start: [usize; 2], step: [i8; 2], end: [usize; 2]) -> Stepper {
+        Stepper {
+            position: start,
+            step,
+            end,
+        }
+    }
+    fn finished(&self) -> bool {
+        self.position == self.end
+    }
+    fn position(&self) -> [usize; 2] {
+        self.position
+    }
+    fn advance(&mut self) {
+        let mut pos = self.position;
+        self.advance_position(&mut pos); // TODO: learn how to NOT use a temp var here
+        self.position = pos;
+    }
+    fn advance_position(&self, position: &mut [usize; 2]) {
+        *position = [
+            (position[0] as i8 + self.step[0]) as usize,
+            (position[1] as i8 + self.step[1]) as usize,
+        ];
     }
 }
