@@ -18,6 +18,7 @@ impl Controller {
         loop {
             let key = nc::getch();
             match key {
+                nc::KEY_RESIZE => break Command::Nop, // window resize event
                 nc::KEY_LEFT => break Command::Left,
                 nc::KEY_RIGHT => break Command::Right,
                 nc::KEY_UP => break Command::Up,

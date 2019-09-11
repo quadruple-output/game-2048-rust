@@ -6,6 +6,7 @@ pub struct Game {
 }
 
 pub enum Command {
+    Nop, // no operation. Used for repainting
     New,
     Quit,
     Right,
@@ -77,6 +78,7 @@ impl Game {
 
     pub fn execute(&mut self, command: &Command) {
         match command {
+            Command::Nop => (),
             Command::Right | Command::Left | Command::Up | Command::Down => {
                 self.board.new_tile();
             }

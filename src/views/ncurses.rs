@@ -21,15 +21,14 @@ impl View {
     #[allow(dead_code)]
     pub fn show(&self, game: &Game) {
         nc::erase(); // like clear(), but without implicit refresh()
-        let mut screen_width = 0;
         let mut screen_height = 0;
+        let mut screen_width = 0;
         nc::getmaxyx(nc::stdscr(), &mut screen_height, &mut screen_width);
         let mut win_height = screen_height - 4;
         let mut win_width = screen_width - 4;
-        // calculate height of window for optimal symmetry (height-2-4)%5 == 0
-        win_height =
-            win_height - (win_height - 2 - game.board.size as i32) % game.board.size as i32; // -2 for borders
-        win_width = win_width - (win_width - 2 - game.board.size as i32) % game.board.size as i32;
+        // calculate height of window for optimal symmetry (height-2)%game.size == 0
+        win_height = win_height - (win_height - 2) % game.board.size as i32; // -2 for borders
+        win_width = win_width - (win_width - 2) % game.board.size as i32;
         let board_win = nc::subwin(nc::stdscr(), win_height, win_width, 2, 2);
         nc::box_(board_win, 0, 0);
         self.show_board_in_window(&game.board, board_win);
