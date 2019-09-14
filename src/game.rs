@@ -22,7 +22,7 @@ pub enum GameState {
 
 pub struct Board {
     pub size: usize, // used as array index -> must be typed 'usize'
-    pub grid: [[Square; 4]; 4],
+    pub grid: Vec<Vec<Square>>,
     rand_range_grid: rand::distributions::Range<usize>, // array indexes must be typed 'usize'
     rand_range_10: rand::distributions::Range<u8>,
     rng: rand::ThreadRng,
@@ -37,17 +37,18 @@ pub enum Square {
 
 impl Board {
     fn new() -> Board {
+        let size = 4;
         Board {
-            size: 4, // TODO: to make this a variable, the type of 'grid' needs to be non-array
-            grid: [[Square::Empty; 4]; 4],
-            rand_range_grid: rand::distributions::Range::new(0, 4),
+            size: size, // TODO: to make this a variable, the type of 'grid' needs to be non-array
+            grid: vec![vec![Square::Empty; size]; size],
+            rand_range_grid: rand::distributions::Range::new(0, size),
             rand_range_10: rand::distributions::Range::new(0, 10),
             rng: rand::thread_rng(),
         }
     }
 
     fn initialize(&mut self) {
-        self.grid = [[Square::Empty; 4]; 4];
+        self.grid = vec![vec![Square::Empty; self.size]; self.size];
         self.new_tile();
     }
 
