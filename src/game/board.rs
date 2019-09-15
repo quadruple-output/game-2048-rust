@@ -7,7 +7,6 @@ pub enum Square {
     Value(u16),
 }
 
-
 pub struct Board {
     pub size: usize, // used as array index -> must be typed 'usize'
     pub grid: Vec<Vec<Square>>,
@@ -40,6 +39,14 @@ impl Board {
         self.grid[x][y] = Square::Value(if self.ten_percent_chance() { 4 } else { 2 });
     }
 
+    pub fn at(&self, coord: Coord) -> Square {
+        self.grid[coord.x][coord.y]
+    }
+
+    fn put(&mut self, coord: Coord, square: Square) {
+        self.grid[coord.x][coord.y] = square;
+    }
+
     fn ten_percent_chance(&mut self) -> bool {
         self.rand_range_10.ind_sample(&mut self.rng) == 0
     }
@@ -51,28 +58,28 @@ impl Board {
     pub fn shift_left(&mut self) {
         for y in 0..self.size {
             // todo: parallel execution
-            self.condense(&mut Stepper::new([0, y], [1, 0], [self.size - 1, y]));
+            self.condense(&mut Stepper::new(0, y, 1, 0, self.size - 1, y));
         }
     }
 
     pub fn shift_right(&mut self) {
         for y in 0..self.size {
             // todo: parallel execution
-            self.condense(&mut Stepper::new([self.size - 1, y], [-1, 0], [0, y]));
+            self.condense(&mut Stepper::new(self.size - 1, y, -1, 0, 0, y));
         }
     }
 
     pub fn shift_up(&mut self) {
         for x in 0..self.size {
             // todo: parallel execution
-            self.condense(&mut Stepper::new([x, 0], [0, 1], [x, self.size - 1]));
+            self.condense(&mut Stepper::new(x, 0, 0, 1, x, self.size - 1));
         }
     }
 
     pub fn shift_down(&mut self) {
         for x in 0..self.size {
             // todo: parallel execution
-            self.condense(&mut Stepper::new([x, self.size - 1], [0, -1], [x, 0]));
+            self.condense(&mut Stepper::new(x, self.size - 1, 0, -1, x, 0));
         }
     }
 
@@ -82,21 +89,21 @@ impl Board {
         while !stepper.finished() {
             stepper.advance();
             inspected = stepper.position();
-            match self.grid[target[0]][target[1]] {
-                Square::Empty => match self.grid[inspected[0]][inspected[1]] {
+            match self.at(target) {
+                Square::Empty => match self.at(inspected) {
                     Square::Empty => {} // just advance
                     Square::Value(v_inspect) => {
-                        self.grid[target[0]][target[1]] = Square::Value(v_inspect);
-                        self.grid[inspected[0]][inspected[1]] = Square::Empty;
+                        self.put(target, Square::Value(v_inspect));
+                        self.put(inspected, Square::Empty);
                         // and advance
                     }
                 },
-                Square::Value(v_target) => match self.grid[inspected[0]][inspected[1]] {
+                Square::Value(v_target) => match self.at(inspected) {
                     Square::Empty => {} // just advance
                     Square::Value(v_inspect) => {
                         if v_target == v_inspect {
-                            self.grid[target[0]][target[1]] = Square::Value(v_target + v_inspect);
-                            self.grid[inspected[0]][inspected[1]] = Square::Empty;
+                            self.put(target, Square::Value(v_target + v_inspect));
+                            self.put(inspected, Square::Empty);
                         } else {
                             // TODO: move inspected adjacent to target
                         }
@@ -110,24 +117,54 @@ impl Board {
     }
 }
 
+#[derive(Copy, Clone)]
+pub struct Coord {
+    pub x: usize,
+    pub y: usize,
+}
+
+struct XYVector {
+    dx: isize,
+    dy: isize,
+}
+
+impl std::cmp::PartialEq for Coord {
+    fn eq(&self, other: &Coord) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+
 struct Stepper {
-    position: [usize; 2],
-    step: [i8; 2],
-    end: [usize; 2],
+    position: Coord,
+    step: XYVector,
+    end: Coord,
 }
 
 impl Stepper {
-    fn new(start: [usize; 2], step: [i8; 2], end: [usize; 2]) -> Stepper {
+    fn new(
+        start_x: usize,
+        start_y: usize,
+        step_x: isize,
+        step_y: isize,
+        end_x: usize,
+        end_y: usize,
+    ) -> Stepper {
         Stepper {
-            position: start,
-            step,
-            end,
+            position: Coord {
+                x: start_x,
+                y: start_y,
+            },
+            step: XYVector {
+                dx: step_x,
+                dy: step_y,
+            },
+            end: Coord { x: end_x, y: end_y },
         }
     }
     fn finished(&self) -> bool {
         self.position == self.end
     }
-    fn position(&self) -> [usize; 2] {
+    fn position(&self) -> Coord {
         self.position
     }
     fn advance(&mut self) {
@@ -135,10 +172,8 @@ impl Stepper {
         self.advance_position(&mut pos); // TODO: learn how to NOT use a temp var here
         self.position = pos;
     }
-    fn advance_position(&self, position: &mut [usize; 2]) {
-        *position = [
-            (position[0] as i8 + self.step[0]) as usize,
-            (position[1] as i8 + self.step[1]) as usize,
-        ];
+    fn advance_position(&self, position: &mut Coord) {
+        position.x = (position.x as isize + self.step.dx) as usize;
+        position.y = (position.y as isize + self.step.dy) as usize;
     }
 }
