@@ -1,24 +1,12 @@
 use rand::distributions::IndependentSample;
 
-pub struct Game {
-    pub board: Board,
-    state: GameState,
+#[derive(Copy, Clone)] // needed for easy Board initialization
+#[derive(Debug)] // only needed for console view. TODO: remove or define in views/console.rs, if possible
+pub enum Square {
+    Empty,
+    Value(u16),
 }
 
-pub enum Command {
-    Nop, // no operation. Used for repainting
-    New,
-    Quit,
-    Right,
-    Left,
-    Up,
-    Down,
-}
-
-pub enum GameState {
-    Running,
-    Finished,
-}
 
 pub struct Board {
     pub size: usize, // used as array index -> must be typed 'usize'
@@ -28,15 +16,8 @@ pub struct Board {
     rng: rand::ThreadRng,
 }
 
-#[derive(Copy, Clone)] // needed for easy Board initialization
-#[derive(Debug)] // only needed for console view. TODO: remove or define in views/console.rs, if possible
-pub enum Square {
-    Empty,
-    Value(u16),
-}
-
 impl Board {
-    fn new() -> Board {
+    pub fn new() -> Board {
         let size = 4;
         Board {
             size: size, // TODO: to make this a variable, the type of 'grid' needs to be non-array
@@ -47,12 +28,12 @@ impl Board {
         }
     }
 
-    fn initialize(&mut self) {
+    pub fn initialize(&mut self) {
         self.grid = vec![vec![Square::Empty; self.size]; self.size];
         self.new_tile();
     }
 
-    fn new_tile(&mut self) {
+    pub fn new_tile(&mut self) {
         let x = self.random_grid_size();
         let y = self.random_grid_size();
         // TODO: avoid non-empty squares
@@ -67,28 +48,28 @@ impl Board {
         self.rand_range_grid.ind_sample(&mut self.rng)
     }
 
-    fn shift_left(&mut self) {
+    pub fn shift_left(&mut self) {
         for y in 0..self.size {
             // todo: parallel execution
             self.condense(&mut Stepper::new([0, y], [1, 0], [self.size - 1, y]));
         }
     }
 
-    fn shift_right(&mut self) {
+    pub fn shift_right(&mut self) {
         for y in 0..self.size {
             // todo: parallel execution
             self.condense(&mut Stepper::new([self.size - 1, y], [-1, 0], [0, y]));
         }
     }
 
-    fn shift_up(&mut self) {
+    pub fn shift_up(&mut self) {
         for x in 0..self.size {
             // todo: parallel execution
             self.condense(&mut Stepper::new([x, 0], [0, 1], [x, self.size - 1]));
         }
     }
 
-    fn shift_down(&mut self) {
+    pub fn shift_down(&mut self) {
         for x in 0..self.size {
             // todo: parallel execution
             self.condense(&mut Stepper::new([x, self.size - 1], [0, -1], [x, 0]));
@@ -126,57 +107,6 @@ impl Board {
             }
         }
         // TODO: write some tests
-    }
-}
-
-impl Game {
-    pub fn new() -> Game {
-        let mut new_game = Game {
-            state: GameState::Running,
-            board: Board::new(),
-        };
-        new_game.restart();
-        new_game
-    }
-
-    pub fn execute(&mut self, command: &Command) {
-        match command {
-            Command::Nop => (), // screen refresh only
-            Command::Left => self.shift_left(),
-            Command::Right => self.shift_right(),
-            Command::Up => self.shift_up(),
-            Command::Down => self.shift_down(),
-            Command::New => self.restart(),
-            Command::Quit => self.state = GameState::Finished,
-        }
-    }
-
-    pub fn state(&self) -> &GameState {
-        &self.state
-    }
-
-    fn restart(&mut self) {
-        self.board.initialize();
-    }
-
-    fn shift_left(&mut self) {
-        self.board.shift_left();
-        self.board.new_tile();
-    }
-
-    fn shift_right(&mut self) {
-        self.board.shift_right();
-        self.board.new_tile();
-    }
-
-    fn shift_up(&mut self) {
-        self.board.shift_up();
-        self.board.new_tile();
-    }
-
-    fn shift_down(&mut self) {
-        self.board.shift_down();
-        self.board.new_tile();
     }
 }
 
