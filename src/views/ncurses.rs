@@ -1,3 +1,4 @@
+use super::View;
 use crate::game::{Board, Game, Square};
 use ncurses as nc;
 
@@ -7,19 +8,10 @@ use ncurses as nc;
 //
 
 #[allow(dead_code)]
-pub struct View {}
+pub struct NCursesView {}
 
-impl View {
-    #[allow(dead_code)]
-    pub fn new() -> View {
-        nc::initscr();
-        nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-        nc::refresh(); // required for first wrefresh to work
-        View {}
-    }
-
-    #[allow(dead_code)]
-    pub fn show(&self, game: &Game) {
+impl View for NCursesView {
+    fn show(&self, game: &Game) {
         nc::erase(); // like clear(), but without implicit refresh()
         let mut screen_height = 0;
         let mut screen_width = 0;
@@ -34,6 +26,16 @@ impl View {
         self.show_board_in_window(&game.board, board_win);
         nc::refresh();
         nc::delwin(board_win);
+    }
+}
+
+impl NCursesView {
+    #[allow(dead_code)]
+    pub fn new() -> impl View {
+        nc::initscr();
+        nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+        nc::refresh(); // required for first wrefresh to work
+        NCursesView {}
     }
 
     fn show_board_in_window(&self, board: &Board, window: nc::WINDOW) {
@@ -59,7 +61,7 @@ impl View {
     }
 }
 
-impl Drop for View {
+impl Drop for NCursesView {
     fn drop(&mut self) {
         nc::endwin();
         println!("fin de ncurses.");

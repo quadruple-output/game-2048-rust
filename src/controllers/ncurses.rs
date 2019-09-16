@@ -1,20 +1,12 @@
+use super::Controller;
 use crate::game::Command;
 use ncurses as nc;
 
 #[allow(dead_code)]
-pub struct Controller {}
+pub struct NCursesController {}
 
-impl Controller {
-    #[allow(dead_code)]
-    pub fn new() -> Controller {
-        nc::cbreak();
-        nc::keypad(nc::stdscr(), true);
-        nc::noecho();
-        Controller {}
-    }
-
-    #[allow(dead_code)]
-    pub fn receive_command(&self) -> Command {
+impl Controller for NCursesController {
+    fn receive_command(&self) -> Command {
         loop {
             let key = nc::getch();
             match key {
@@ -31,5 +23,15 @@ impl Controller {
                 _ => (),
             }
         }
+    }
+}
+
+impl NCursesController {
+    #[allow(dead_code)]
+    pub fn new() -> impl Controller {
+        nc::cbreak();
+        nc::keypad(nc::stdscr(), true);
+        nc::noecho();
+        NCursesController {}
     }
 }

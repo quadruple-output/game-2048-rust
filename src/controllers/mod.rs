@@ -1,5 +1,11 @@
 mod console;
 mod ncurses;
 
-pub use console::Controller as ConsoleController;
-pub use self::ncurses::Controller as NCursesController;
+use crate::game::Command;
+
+pub use self::ncurses::NCursesController;
+pub use console::ConsoleController;
+
+pub trait Controller {
+    fn receive_command(&self) -> Command;
+}

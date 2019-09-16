@@ -2,7 +2,9 @@ mod controllers;
 mod game;
 mod views;
 
-use game::{Game, GameState::*}; // '::Finished' and '::Running'
+use controllers::Controller;
+use game::{Game, GameState::Finished};
+use views::View;
 
 fn main() {
     let mut game = Game::new();
@@ -14,9 +16,8 @@ fn main() {
     loop {
         view.show(&game);
         game.execute(&controller.receive_command());
-        match game.state() {
-            Finished => break,
-            Running => (),
+        if let Finished = game.state() {
+            break;
         }
     }
 }

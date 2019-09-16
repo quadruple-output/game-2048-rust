@@ -1,17 +1,12 @@
+use super::Controller;
 use crate::game::Command;
 use std::io;
 
 #[allow(dead_code)]
-pub struct Controller {}
+pub struct ConsoleController {}
 
-impl Controller {
-    #[allow(dead_code)]
-    pub fn new() -> Controller {
-        Controller {}
-    }
-
-    #[allow(dead_code)]
-    pub fn receive_command(&self) -> Command {
+impl Controller for ConsoleController {
+    fn receive_command(&self) -> Command {
         let mut cmd;
         loop {
             cmd = String::new();
@@ -31,5 +26,12 @@ impl Controller {
                 }
             }
         }
+    }
+}
+
+impl ConsoleController {
+    #[allow(dead_code)]
+    pub fn new() -> impl Controller {
+        ConsoleController {}
     }
 }

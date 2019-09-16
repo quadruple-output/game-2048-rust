@@ -1,17 +1,19 @@
+use super::View;
 use crate::game::{Board, Game};
 
 #[allow(dead_code)]
-pub struct View {}
+pub struct ConsoleView {}
 
-impl View {
-    #[allow(dead_code)]
-    pub fn new() -> View {
-        View {}
-    }
-
-    #[allow(dead_code)]
-    pub fn show(&self, game: &Game) {
+impl View for ConsoleView {
+    fn show(&self, game: &Game) {
         self.show_board(&game.board);
+    }
+}
+
+impl ConsoleView {
+    #[allow(dead_code)]
+    pub fn new() -> impl View {
+        ConsoleView {}
     }
 
     fn show_board(&self, board: &Board) {
