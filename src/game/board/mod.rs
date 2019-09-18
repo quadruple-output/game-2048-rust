@@ -1,18 +1,40 @@
+#[cfg(test)]
+mod test;
+
 use rand::distributions::IndependentSample;
 
 #[derive(Copy, Clone)] // needed for easy Board initialization
 #[derive(Debug)] // only needed for console view. TODO: remove or define in views/console.rs, if possible
+#[derive(PartialEq)] // needed for tests
 pub enum Square {
     Empty,
     Value(u16),
 }
 
+#[derive(Clone, Debug)]
 pub struct Board {
     pub size: usize, // used as array index -> must be typed 'usize'
     pub grid: Vec<Vec<Square>>,
     rand_range_grid: rand::distributions::Range<usize>, // array indexes must be typed 'usize'
     rand_range_10: rand::distributions::Range<u8>,
     rng: rand::ThreadRng,
+}
+
+impl PartialEq for Board {
+    fn eq(&self, other: &Board) -> bool {
+        if self.size != other.size {
+            false
+        } else {
+            for x in 0..self.size {
+                for y in 0..self.size {
+                    if self.at(Coord { x, y }) != other.at(Coord { x, y }) {
+                        return false;
+                    }
+                }
+            }
+            true
+        }
+    }
 }
 
 impl Board {
