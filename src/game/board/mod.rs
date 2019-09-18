@@ -102,6 +102,7 @@ impl Board {
         for x in 0..self.size {
             // todo: parallel execution
             self.condense(&mut Stepper::new(x, self.size - 1, 0, -1, x, 0));
+            // self.contract( Coord{x,self.size-1}, XYVector{dx:0,dy:-1}, Coord{x,0});
         }
     }
 
