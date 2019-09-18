@@ -46,6 +46,11 @@ fn shift_2_0_0_2() {
 }
 
 #[test]
+fn shift_2_0_0_4() {
+    shift_and_expect([2, 0, 0, 4], [2, 4, 0, 0]);
+}
+
+#[test]
 fn shift_4_0_2_2() {
     shift_and_expect([4, 0, 2, 2], [4, 4, 0, 0]);
 }
