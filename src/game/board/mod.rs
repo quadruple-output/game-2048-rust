@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod test;
 
+use self::Square::*;
 use rand::distributions::IndependentSample;
 
 #[derive(Copy, Clone)] // needed for easy Board initialization
@@ -91,18 +92,41 @@ impl Board {
         }
     }
 
-    pub fn shift_up(&mut self) {
-        for x in 0..self.size {
-            // todo: parallel execution
-            self.condense(&mut Stepper::new(x, 0, 0, 1, x, self.size - 1));
-        }
-    }
-
     pub fn shift_down(&mut self) {
         for x in 0..self.size {
             // todo: parallel execution
             self.condense(&mut Stepper::new(x, self.size - 1, 0, -1, x, 0));
-            // self.contract( Coord{x,self.size-1}, XYVector{dx:0,dy:-1}, Coord{x,0});
+        }
+    }
+
+    #[allow(unused_must_use)]
+    pub fn shift_up(&mut self) {
+        for x in 0..self.size {
+            // todo: parallel execution
+            // self.condense(&mut Stepper::new(x, 0, 0, 1, x, self.size - 1));
+            self.contract(Coord { x, y: 0 }, Vector { dx: 0, dy: 1 }, self.size);
+        }
+    }
+
+    fn contract(&mut self, start: Coord, direction: Vector, num_steps: usize) -> Result<(), ()> {
+        let mut cursor = DualCursor::new(start, direction, num_steps);
+        loop {
+            if let Value(source_value) = self.at(cursor.source) {
+                match self.at(cursor.target) {
+                    Empty => {
+                        self.put(cursor.target, Value(source_value));
+                        self.put(cursor.source, Empty)
+                    }
+                    Value(target_value) => {
+                        if target_value == source_value {
+                            self.put(cursor.target, Value(source_value + target_value));
+                            self.put(cursor.source, Empty)
+                        }
+                        cursor.advance_target()?;
+                    }
+                };
+            }
+            cursor.advance_source()?;
         }
     }
 
@@ -146,20 +170,86 @@ pub struct Coord {
     pub y: usize,
 }
 
-struct XYVector {
-    dx: isize,
-    dy: isize,
-}
-
 impl std::cmp::PartialEq for Coord {
     fn eq(&self, other: &Coord) -> bool {
         self.x == other.x && self.y == other.y
     }
 }
 
+impl Coord {
+    fn add(&self, vector: Vector) -> Result<Self, ()> {
+        // TODO: enable use of '+' operator (not trivial with Rhs being of different type)
+        let new_x = self.x as isize + vector.dx;
+        let new_y = self.y as isize + vector.dy;
+        if new_x < 0 || new_y < 0 {
+            Err(())
+        } else {
+            Ok(Self {
+                x: new_x as usize,
+                y: new_y as usize,
+            })
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+struct Vector {
+    dx: isize,
+    dy: isize,
+}
+
+impl Vector {
+    fn times(&self, factor: usize) -> Self {
+        Self {
+            dx: self.dx * factor as isize,
+            dy: self.dy * factor as isize,
+        }
+    }
+}
+
+struct DualCursor {
+    target: Coord,
+    source: Coord,
+    direction: Vector,
+    end: Result<Coord, ()>,
+}
+
+impl DualCursor {
+    fn new(start: Coord, direction: Vector, num_squares: usize) -> DualCursor {
+        DualCursor {
+            target: start,
+            source: start.add(direction).unwrap(),
+            direction,
+            end: start.add(direction.times(num_squares)),
+        }
+    }
+
+    fn advance_source(&mut self) -> Result<(), ()> {
+        self.source = self.source.add(self.direction)?;
+        if let Ok(end_coord) = self.end {
+            // if self.end is not Ok, the 'add' method above raises an error at end
+            if self.source == end_coord {
+                return Err(());
+            }
+        }
+        Ok(())
+    }
+
+    fn advance_target(&mut self) -> Result<(), ()> {
+        self.target = self.target.add(self.direction)?;
+        if let Ok(end_coord) = self.end {
+            // if self.end is not Ok, the 'add' method above raises an error at end
+            if self.target == end_coord {
+                return Err(());
+            }
+        }
+        Ok(())
+    }
+}
+
 struct Stepper {
     position: Coord,
-    step: XYVector,
+    step: Vector,
     end: Coord,
 }
 
@@ -177,7 +267,7 @@ impl Stepper {
                 x: start_x,
                 y: start_y,
             },
-            step: XYVector {
+            step: Vector {
                 dx: step_x,
                 dy: step_y,
             },
