@@ -47,14 +47,15 @@ impl Board {
 
     pub fn initialize(&mut self) {
         self.grid = vec![vec![Square::Empty; self.size]; self.size];
-        self.new_tile();
+        self.new_tile().unwrap();
     }
 
-    pub fn new_tile(&mut self) {
+    pub fn new_tile(&mut self) -> Result<(), ()> {
         let x = self.random_grid_size();
         let y = self.random_grid_size();
         // TODO: avoid non-empty squares
         self.grid[x][y] = Square::Value(if self.ten_percent_chance() { 4 } else { 2 });
+        Ok(())
     }
 
     pub fn at(&self, coord: Coord) -> Square {
