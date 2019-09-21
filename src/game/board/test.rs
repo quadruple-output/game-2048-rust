@@ -129,7 +129,7 @@ fn board_with_column(column: [u16; 4]) -> Board {
     let mut y = 0;
     for value in column.iter() {
         board.put(
-            Coord { x: 0, y },
+            board.coord(0, y),
             match *value {
                 0 => Square::Empty,
                 _ => Square::Value(*value),
