@@ -1,13 +1,12 @@
 use super::coord::{Coord, Vector};
 use super::cursor::DualCursor;
 use super::{Square, Square::*};
-use rand::distributions::IndependentSample;
+use rand::{distributions::IndependentSample, Rng};
 
 #[derive(Clone, Debug)]
 pub struct Board {
     pub size: usize, // used as array index -> must be typed 'usize'
     pub grid: Vec<Vec<Square>>,
-    rand_range_grid: rand::distributions::Range<usize>, // array indexes must be typed 'usize'
     rand_range_10: rand::distributions::Range<u8>,
     rng: rand::ThreadRng,
 }
@@ -35,7 +34,6 @@ impl Board {
         Board {
             size: size, // TODO: to make this a variable, the type of 'grid' needs to be non-array
             grid: vec![vec![Square::Empty; size]; size],
-            rand_range_grid: rand::distributions::Range::new(0, size),
             rand_range_10: rand::distributions::Range::new(0, 10),
             rng: rand::thread_rng(),
         }
@@ -51,11 +49,42 @@ impl Board {
     }
 
     pub fn new_tile(&mut self) -> Result<(), ()> {
-        let x = self.random_grid_size();
-        let y = self.random_grid_size();
-        // TODO: avoid non-empty squares
-        self.grid[x][y] = Square::Value(if self.ten_percent_chance() { 4 } else { 2 });
+        let n = self.rng.gen_range(0, self.num_free_tiles()?);
+        let rnd_free_coord = self.find_free_tile(n);
+        let new_value = if self.ten_percent_chance() { 4 } else { 2 };
+        self.put(rnd_free_coord, Value(new_value));
         Ok(())
+    }
+
+    fn num_free_tiles(&self) -> Result<usize, ()> {
+        let mut n = 0;
+        for column in &self.grid {
+            for square in column {
+                if let Empty = square {
+                    n += 1;
+                }
+            }
+        }
+        if n == 0 {
+            Err(())
+        } else {
+            Ok(n)
+        }
+    }
+
+    fn find_free_tile(&self, n: usize) -> Coord {
+        let mut count = 0;
+        for x in 0..self.size {
+            for y in 0..self.size {
+                if let Empty = self.grid[x][y] {
+                    if count == n {
+                        return self.coord(x, y);
+                    }
+                    count += 1;
+                }
+            }
+        }
+        panic!();
     }
 
     pub fn at(&self, coord: Coord) -> Square {
@@ -68,10 +97,6 @@ impl Board {
 
     fn ten_percent_chance(&mut self) -> bool {
         self.rand_range_10.ind_sample(&mut self.rng) == 0
-    }
-
-    fn random_grid_size(&mut self) -> usize {
-        self.rand_range_grid.ind_sample(&mut self.rng)
     }
 
     #[allow(unused_must_use)]
