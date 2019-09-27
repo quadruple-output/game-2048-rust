@@ -16,7 +16,8 @@ pub struct NCursesView {
 }
 
 impl View for NCursesView {
-    fn show(&self, game: &Game) {
+    fn update(&self) {
+        let game = self.game.borrow();
         nc::erase(); // like clear(), but without implicit refresh()
         let mut screen_height = 0;
         let mut screen_width = 0;

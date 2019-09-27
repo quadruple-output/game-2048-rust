@@ -1,19 +1,24 @@
+use::std::rc::Rc;
+use::std::cell::RefCell;
+
 use super::View;
 use crate::game::{Board, Game};
 
 #[allow(dead_code)]
-pub struct ConsoleView {}
+pub struct ConsoleView {
+    game: Rc<RefCell<Game>>,
+}
 
 impl View for ConsoleView {
-    fn show(&self, game: &Game) {
-        self.show_board(&game.board);
+    fn update(&self) {
+        self.show_board(&self.game.borrow().board);
     }
 }
 
 impl ConsoleView {
     #[allow(dead_code)]
-    pub fn new() -> impl View {
-        ConsoleView {}
+    pub fn new(game: Rc<RefCell<Game>>) -> impl View {
+        ConsoleView { game }
     }
 
     fn show_board(&self, board: &Board) {
