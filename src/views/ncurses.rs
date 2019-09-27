@@ -37,7 +37,7 @@ impl View for NCursesView {
 
 impl NCursesView {
     #[allow(dead_code)]
-    pub fn new(game: Rc<RefCell<Game>>) -> impl View {
+    pub fn new(game: Rc<RefCell<Game>>) -> Self {
         nc::initscr();
         nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
         nc::refresh(); // required for first wrefresh to work

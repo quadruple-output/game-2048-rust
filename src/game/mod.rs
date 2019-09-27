@@ -32,7 +32,7 @@ impl Game {
         new_game
     }
 
-    pub fn execute(&mut self, command: &Command) -> Result<(), ()> {
+    pub fn execute(&mut self, command: Command) -> Result<(), ()> {
         match command {
             Command::Nop => Ok(()), // screen refresh only
             Command::Left => self.shift_left(),

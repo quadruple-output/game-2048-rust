@@ -1,11 +1,30 @@
-use super::Controller;
-use crate::game::Command;
+use std::cell::{Ref, RefCell, RefMut};
 use std::io;
+use std::rc::Rc;
+
+use super::Controller;
+use crate::game::{Command, Game};
+use crate::views::{ConsoleView, View};
 
 #[allow(dead_code)]
-pub struct ConsoleController {}
+pub struct ConsoleController {
+    game: Rc<RefCell<Game>>,
+    view: ConsoleView,
+}
 
 impl Controller for ConsoleController {
+    fn view(&self) -> &dyn View {
+        &self.view
+    }
+
+    fn game(&self) -> Ref<Game> {
+        self.game.borrow()
+    }
+
+    fn mut_game(&self) -> RefMut<Game> {
+        self.game.borrow_mut()
+    }
+
     fn receive_command(&self) -> Command {
         let mut cmd;
         loop {
@@ -31,7 +50,7 @@ impl Controller for ConsoleController {
 
 impl ConsoleController {
     #[allow(dead_code)]
-    pub fn new() -> impl Controller {
-        ConsoleController {}
+    pub fn new(game: Rc<RefCell<Game>>, view: ConsoleView) -> impl Controller {
+        ConsoleController { game, view }
     }
 }
