@@ -1,6 +1,9 @@
+use ncurses as nc;
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use super::View;
 use crate::game::{Board, Game, Square};
-use ncurses as nc;
 
 //
 // NCurses HOWTO: http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
@@ -8,7 +11,9 @@ use ncurses as nc;
 //
 
 #[allow(dead_code)]
-pub struct NCursesView {}
+pub struct NCursesView {
+    game: Rc<RefCell<Game>>,
+}
 
 impl View for NCursesView {
     fn show(&self, game: &Game) {
@@ -31,11 +36,11 @@ impl View for NCursesView {
 
 impl NCursesView {
     #[allow(dead_code)]
-    pub fn new() -> impl View {
+    pub fn new(game: Rc<RefCell<Game>>) -> impl View {
         nc::initscr();
         nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
         nc::refresh(); // required for first wrefresh to work
-        NCursesView {}
+        NCursesView { game }
     }
 
     fn show_board_in_window(&self, board: &Board, window: nc::WINDOW) {

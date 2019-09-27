@@ -1,9 +1,14 @@
-use super::Controller;
-use crate::game::Command;
+use std::rc::Rc;
+use std::cell::RefCell;
 use ncurses as nc;
 
+use super::Controller;
+use crate::game::{Game, Command};
+
 #[allow(dead_code)]
-pub struct NCursesController {}
+pub struct NCursesController {
+    game: Rc<RefCell<Game>>,
+}
 
 impl Controller for NCursesController {
     fn receive_command(&self) -> Command {
@@ -28,10 +33,10 @@ impl Controller for NCursesController {
 
 impl NCursesController {
     #[allow(dead_code)]
-    pub fn new() -> impl Controller {
+    pub fn new(game: Rc<RefCell<Game>>) -> impl Controller {
         nc::cbreak();
         nc::keypad(nc::stdscr(), true);
         nc::noecho();
-        NCursesController {}
+        NCursesController {game}
     }
 }
