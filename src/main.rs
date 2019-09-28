@@ -1,18 +1,22 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::env;
 
-use controllers::{ConsoleController, Controller, NCursesController};
-use game::Game;
-use views::{ConsoleView, NCursesView};
+use game2048::{run, ViewType};
 
-mod controllers;
-mod game;
-mod views;
+pub struct Config {
+    show_version: bool,
+    view_type: ViewType,
+}
+
+impl Config {
+    pub fn from_args(args: Vec<String>) -> Self {
+        Config {
+            show_version: false,
+            view_type: ViewType::NCurses,
+        }
+    }
+}
 
 fn main() {
-    let game = Rc::new(RefCell::new(Game::new()));
-    let view = ConsoleView::new(Rc::clone(&game));
-    let controller = ConsoleController::new(Rc::clone(&game), view);
-
-    controller.run_game();
+    let config = Config::from_args(env::args().collect());
+    run(config.view_type);
 }
