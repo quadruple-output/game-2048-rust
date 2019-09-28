@@ -6,10 +6,18 @@ use super::Controller;
 use crate::game::{Command, Game};
 use crate::views::{NCursesView, View};
 
-#[allow(dead_code)]
 pub struct NCursesController {
     game: Rc<RefCell<Game>>,
     view: NCursesView,
+}
+
+impl NCursesController {
+    pub fn new(game: Rc<RefCell<Game>>, view: NCursesView) -> impl Controller {
+        nc::cbreak();
+        nc::keypad(nc::stdscr(), true);
+        nc::noecho();
+        NCursesController { game, view }
+    }
 }
 
 impl Controller for NCursesController {
@@ -45,12 +53,3 @@ impl Controller for NCursesController {
     }
 }
 
-impl NCursesController {
-    #[allow(dead_code)]
-    pub fn new(game: Rc<RefCell<Game>>, view: NCursesView) -> impl Controller {
-        nc::cbreak();
-        nc::keypad(nc::stdscr(), true);
-        nc::noecho();
-        NCursesController { game, view }
-    }
-}

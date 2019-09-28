@@ -4,7 +4,6 @@ use ::std::rc::Rc;
 use super::View;
 use crate::game::{Board, Game, Square};
 
-#[allow(dead_code)]
 pub struct ConsoleView {
     game: Rc<RefCell<Game>>,
 }
@@ -16,7 +15,6 @@ impl View for ConsoleView {
 }
 
 impl ConsoleView {
-    #[allow(dead_code)]
     pub fn new(game: Rc<RefCell<Game>>) -> ConsoleView {
         ConsoleView { game }
     }

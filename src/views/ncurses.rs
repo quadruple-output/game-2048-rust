@@ -10,7 +10,6 @@ use crate::game::{Board, Game, Square};
 // man pages: man 3x <function>
 //
 
-#[allow(dead_code)]
 pub struct NCursesView {
     game: Rc<RefCell<Game>>,
 }
@@ -36,7 +35,6 @@ impl View for NCursesView {
 }
 
 impl NCursesView {
-    #[allow(dead_code)]
     pub fn new(game: Rc<RefCell<Game>>) -> Self {
         nc::initscr();
         nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);

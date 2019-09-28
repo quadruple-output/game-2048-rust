@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use controllers::{ConsoleController, Controller, NCursesController};
 use game::Game;
-use views::{ConsoleView, NCursesView, View};
+use views::{ConsoleView, NCursesView};
 
 mod controllers;
 mod game;

@@ -6,10 +6,15 @@ use super::Controller;
 use crate::game::{Command, Game};
 use crate::views::{ConsoleView, View};
 
-#[allow(dead_code)]
 pub struct ConsoleController {
     game: Rc<RefCell<Game>>,
     view: ConsoleView,
+}
+
+impl ConsoleController {
+    pub fn new(game: Rc<RefCell<Game>>, view: ConsoleView) -> impl Controller {
+        ConsoleController { game, view }
+    }
 }
 
 impl Controller for ConsoleController {
@@ -45,12 +50,5 @@ impl Controller for ConsoleController {
                 }
             }
         }
-    }
-}
-
-impl ConsoleController {
-    #[allow(dead_code)]
-    pub fn new(game: Rc<RefCell<Game>>, view: ConsoleView) -> impl Controller {
-        ConsoleController { game, view }
     }
 }
