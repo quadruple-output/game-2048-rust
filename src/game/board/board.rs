@@ -1,5 +1,6 @@
 use super::coord::{Coord, Vector};
 use super::cursor::DualCursor;
+use super::r#move::Move;
 use super::{Square, Square::*};
 use rand::{distributions::IndependentSample, Rng};
 
@@ -131,30 +132,54 @@ impl Board {
         }
     }
 
-    fn contract(&mut self, start: Coord, direction: Vector) -> Result<(), ()> {
+    fn contract(&mut self, start: Coord, direction: Vector) -> Vec<Move> {
+        let mut result: Vec<Move> = Vec::new();
         let mut cursor = DualCursor::new(start, direction);
         loop {
             match self.at(cursor.source) {
                 Empty => {
-                    cursor.advance_source()?;
+                    if let Err(_) = cursor.advance_source() {
+                        break;
+                    };
                 }
                 Value(source_value) => match self.at(cursor.target) {
                     Empty => {
+                        result.push(Move::new(
+                            cursor.source,
+                            cursor.target,
+                            source_value,
+                            source_value,
+                            Empty,
+                        ));
                         self.put(cursor.target, Value(source_value));
                         self.put(cursor.source, Empty);
-                        cursor.advance_source()?;
+                        if let Err(_) = cursor.advance_source() {
+                            break;
+                        }
                     }
                     Value(target_value) => {
                         if target_value == source_value {
+                            result.push(Move::new(
+                                cursor.source,
+                                cursor.target,
+                                source_value,
+                                source_value + target_value,
+                                Value(target_value),
+                            ));
                             self.put(cursor.target, Value(source_value + target_value));
                             self.put(cursor.source, Empty);
-                            cursor.advance_both()?;
+                            if let Err(_) = cursor.advance_both() {
+                                break;
+                            };
                         } else {
-                            cursor.advance_target()?;
+                            if let Err(_) = cursor.advance_target() {
+                                break;
+                            };
                         }
                     }
                 },
             }
         }
+        result
     }
 }

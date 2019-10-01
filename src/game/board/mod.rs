@@ -3,6 +3,7 @@ pub use board::Board;
 mod board;
 mod coord;
 mod cursor;
+mod r#move;
 #[cfg(test)]
 mod test;
 

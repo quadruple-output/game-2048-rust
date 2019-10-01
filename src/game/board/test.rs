@@ -6,6 +6,11 @@ fn shift_empty_board() {
 }
 
 #[test]
+fn shift_impossible() {
+    shift_and_expect([2, 4, 8, 16], [2, 4, 8, 16]);
+}
+
+#[test]
 fn shift_2_0_0_0() {
     shift_and_expect([2, 0, 0, 0], [2, 0, 0, 0]);
 }
