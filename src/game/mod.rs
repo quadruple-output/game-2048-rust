@@ -1,6 +1,6 @@
 mod board;
 
-pub use board::{Board, Square};
+pub use board::{Board, Move, Square};
 
 pub enum Command {
     Nop, // no operation. Used for repainting
@@ -14,7 +14,7 @@ pub enum Command {
 
 pub enum GameState {
     Running,
-    Finished,
+    Quit,
 }
 
 pub struct Game {
@@ -32,20 +32,20 @@ impl Game {
         new_game
     }
 
-    pub fn execute(&mut self, command: Command) -> Result<(), ()> {
+    pub fn execute(&mut self, command: Command) -> Option<Vec<Move>> {
         match command {
-            Command::Nop => Ok(()), // screen refresh only
+            Command::Nop => None, // screen refresh only
             Command::Left => self.shift_left(),
             Command::Right => self.shift_right(),
             Command::Up => self.shift_up(),
             Command::Down => self.shift_down(),
             Command::New => {
                 self.restart();
-                Ok(())
+                None
             }
             Command::Quit => {
-                self.state = GameState::Finished;
-                Ok(())
+                self.state = GameState::Quit;
+                None
             }
         }
     }
@@ -58,23 +58,43 @@ impl Game {
         self.board.initialize();
     }
 
-    fn shift_left(&mut self) -> Result<(), ()> {
-        self.board.shift_left();
-        self.board.new_tile()
+    fn shift_left(&mut self) -> Option<Vec<Move>> {
+        match self.board.shift_left() {
+            Ok(moves) => {
+                self.board.new_tile();
+                Some(moves)
+            }
+            Err(_) => None,
+        }
     }
 
-    fn shift_right(&mut self) -> Result<(), ()> {
-        self.board.shift_right();
-        self.board.new_tile()
+    fn shift_right(&mut self) -> Option<Vec<Move>> {
+        match self.board.shift_right() {
+            Ok(moves) => {
+                self.board.new_tile();
+                Some(moves)
+            }
+            Err(_) => None,
+        }
     }
 
-    fn shift_up(&mut self) -> Result<(), ()> {
-        self.board.shift_up();
-        self.board.new_tile()
+    fn shift_up(&mut self) -> Option<Vec<Move>> {
+        match self.board.shift_up() {
+            Ok(moves) => {
+                self.board.new_tile();
+                Some(moves)
+            }
+            Err(_) => None,
+        }
     }
 
-    fn shift_down(&mut self) -> Result<(), ()> {
-        self.board.shift_down();
-        self.board.new_tile()
+    fn shift_down(&mut self) -> Option<Vec<Move>> {
+        match self.board.shift_down() {
+            Ok(moves) => {
+                self.board.new_tile();
+                Some(moves)
+            }
+            Err(_) => None,
+        }
     }
 }

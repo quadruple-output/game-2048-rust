@@ -112,7 +112,10 @@ fn shift_and_expect(probe: [u16; 4], exp: [u16; 4]) {
 
 fn shift(column: [u16; 4]) -> [u16; 4] {
     let mut board = board_with_column(column);
-    board.shift_up();
+    board
+        .shift_up()
+        .or_else::<(), _>(|_| Ok(Vec::new())) // unfortunately, we need a type annotation here
+        .unwrap();
     first_column_from_board(board)
 }
 

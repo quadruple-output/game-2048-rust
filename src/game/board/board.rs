@@ -100,40 +100,62 @@ impl Board {
         self.rand_range_10.ind_sample(&mut self.rng) == 0
     }
 
-    #[allow(unused_must_use)]
-    pub fn shift_left(&mut self) {
+    pub fn shift_left(&mut self) -> Result<Vec<Move>, ()> {
+        let mut moves = Vec::new();
         for y in 0..self.size {
             // todo: parallel execution
-            self.contract(self.coord(0, y), Vector { dx: 1, dy: 0 });
+            moves.append(&mut self.contract(self.coord(0, y), Vector { dx: 1, dy: 0 }));
+        }
+        if moves.is_empty() {
+            Err(())
+        } else {
+            Ok(moves)
         }
     }
 
-    #[allow(unused_must_use)]
-    pub fn shift_right(&mut self) {
+    pub fn shift_right(&mut self) -> Result<Vec<Move>, ()> {
+        let mut moves = Vec::new();
         for y in 0..self.size {
             // todo: parallel execution
-            self.contract(self.coord(self.size - 1, y), Vector { dx: -1, dy: 0 });
+            moves
+                .append(&mut self.contract(self.coord(self.size - 1, y), Vector { dx: -1, dy: 0 }));
+        }
+        if moves.is_empty() {
+            Err(())
+        } else {
+            Ok(moves)
         }
     }
 
-    #[allow(unused_must_use)]
-    pub fn shift_down(&mut self) {
+    pub fn shift_down(&mut self) -> Result<Vec<Move>, ()> {
+        let mut moves = Vec::new();
         for x in 0..self.size {
             // todo: parallel execution
-            self.contract(self.coord(x, self.size - 1), Vector { dx: 0, dy: -1 });
+            moves
+                .append(&mut self.contract(self.coord(x, self.size - 1), Vector { dx: 0, dy: -1 }));
+        }
+        if moves.is_empty() {
+            Err(())
+        } else {
+            Ok(moves)
         }
     }
 
-    #[allow(unused_must_use)]
-    pub fn shift_up(&mut self) {
+    pub fn shift_up(&mut self) -> Result<Vec<Move>, ()> {
+        let mut moves = Vec::new();
         for x in 0..self.size {
             // todo: parallel execution
-            self.contract(self.coord(x, 0), Vector { dx: 0, dy: 1 });
+            moves.append(&mut self.contract(self.coord(x, 0), Vector { dx: 0, dy: 1 }));
+        }
+        if moves.is_empty() {
+            Err(())
+        } else {
+            Ok(moves)
         }
     }
 
     fn contract(&mut self, start: Coord, direction: Vector) -> Vec<Move> {
-        let mut result: Vec<Move> = Vec::new();
+        let mut result = Vec::new();
         let mut cursor = DualCursor::new(start, direction);
         loop {
             match self.at(cursor.source) {

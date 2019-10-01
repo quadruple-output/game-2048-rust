@@ -1,7 +1,7 @@
 use super::coord::Coord;
 use super::Square;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Move {
     from: Coord,
     to: Coord,

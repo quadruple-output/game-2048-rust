@@ -1,6 +1,6 @@
 use std::cell::{Ref, RefMut};
 
-use crate::game::{Command, Game, GameState::*};
+use crate::game::{Command, Game, GameState};
 use crate::views::View;
 
 pub use self::ncurses::NCursesController;
@@ -22,7 +22,7 @@ pub trait Controller {
         loop {
             self.view().update();
             self.mut_game().execute(self.receive_command());
-            if let Finished = self.game().state() {
+            if let GameState::Quit = self.game().state() {
                 break;
             }
         }
