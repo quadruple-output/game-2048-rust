@@ -12,6 +12,6 @@ pub use r#move::Move;
 #[derive(Debug)] // only needed for console view. TODO: remove or define in views/console.rs, if possible
 #[derive(PartialEq)] // needed for tests
 pub enum Square {
-    Empty,
-    Value(u16),
+	Empty,
+	Value(u16),
 }

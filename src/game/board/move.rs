@@ -1,29 +1,15 @@
 use super::coord::Coord;
-use super::Square;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Move {
-    from: Coord,
-    to: Coord,
-    start_value: u16,
-    end_value: u16,
-    target_square: Square,
+	from: Coord,
+	to: Coord,
+	start_value: u16,
+	end_value: u16,
 }
 
 impl Move {
-    pub fn new(
-        from: Coord,
-        to: Coord,
-        start_value: u16,
-        end_value: u16,
-        target_square: Square,
-    ) -> Self {
-        Self {
-            from,
-            to,
-            start_value,
-            end_value,
-            target_square,
-        }
-    }
+	pub fn new(from: Coord, to: Coord, start_value: u16, end_value: u16) -> Self {
+		Self { from, to, start_value, end_value }
+	}
 }

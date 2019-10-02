@@ -10,24 +10,24 @@ mod game;
 mod views;
 
 pub enum ViewType {
-    Console,
-    NCurses,
+	Console,
+	NCurses,
 }
 
 pub fn run(view_type: ViewType) {
-    let game = Rc::new(RefCell::new(Game::new()));
-    let controller: Box<dyn Controller>;
+	let game = Rc::new(RefCell::new(Game::new()));
+	let controller: Box<dyn Controller>;
 
-    match view_type {
-        ViewType::Console => {
-            let view = ConsoleView::new(Rc::clone(&game));
-            controller = Box::new(ConsoleController::new(Rc::clone(&game), view));
-        }
-        ViewType::NCurses => {
-            let view = NCursesView::new(Rc::clone(&game));
-            controller = Box::new(NCursesController::new(Rc::clone(&game), view));
-        }
-    }
+	match view_type {
+		ViewType::Console => {
+			let view = ConsoleView::new(Rc::clone(&game));
+			controller = Box::new(ConsoleController::new(Rc::clone(&game), view));
+		}
+		ViewType::NCurses => {
+			let view = NCursesView::new(Rc::clone(&game));
+			controller = Box::new(NCursesController::new(Rc::clone(&game), view));
+		}
+	}
 
-    controller.run_game();
+	controller.run_game();
 }
