@@ -46,18 +46,21 @@ impl Board {
 
     pub fn initialize(&mut self) {
         self.grid = vec![vec![Square::Empty; self.size]; self.size];
-        self.new_tile().unwrap();
+        self.new_tile();
     }
 
-    pub fn new_tile(&mut self) -> Result<(), ()> {
-        let n = self.rng.gen_range(0, self.num_free_tiles()?);
+    pub fn new_tile(&mut self) {
+        let num_free_tiles = self.num_free_tiles();
+        if num_free_tiles == 0 {
+            panic!("tried to place a new tile on a full board")
+        };
+        let n = self.rng.gen_range(0, num_free_tiles);
         let rnd_free_coord = self.find_free_tile(n);
         let new_value = if self.ten_percent_chance() { 4 } else { 2 };
         self.put(rnd_free_coord, Value(new_value));
-        Ok(())
     }
 
-    fn num_free_tiles(&self) -> Result<usize, ()> {
+    fn num_free_tiles(&self) -> usize {
         let mut n = 0;
         for column in &self.grid {
             for square in column {
@@ -66,11 +69,7 @@ impl Board {
                 }
             }
         }
-        if n == 0 {
-            Err(())
-        } else {
-            Ok(n)
-        }
+        n
     }
 
     fn find_free_tile(&self, n: usize) -> Coord {
