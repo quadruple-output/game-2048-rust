@@ -121,13 +121,11 @@ fn shift(column: [u16; 4]) -> [u16; 4] {
 
 fn first_column_from_board(board: Board) -> [u16; 4] {
     let mut result = [0, 0, 0, 0];
-    let mut i = 0;
-    for square in &board.grid[0] {
-        result[i] = match square {
+    for i in 0..board.size() {
+        result[i] = match board.at_xy(0,i) {
             Square::Empty => 0,
-            Square::Value(v) => *v,
+            Square::Value(val) => val,
         };
-        i += 1;
     }
     result
 }

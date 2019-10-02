@@ -6,8 +6,8 @@ use rand::{distributions::IndependentSample, Rng};
 
 #[derive(Clone, Debug)]
 pub struct Board {
-    pub size: usize, // used as array index -> must be typed 'usize'
-    pub grid: Vec<Vec<Square>>,
+    size: usize, // used as array index -> must be typed 'usize'
+    grid: Vec<Vec<Square>>,
     rand_range_10: rand::distributions::Range<u8>,
     rng: rand::ThreadRng,
 }
@@ -87,8 +87,16 @@ impl Board {
         panic!();
     }
 
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
     pub fn at(&self, coord: Coord) -> Square {
-        self.grid[coord.x][coord.y]
+        self.at_xy(coord.x,coord.y)
+    }
+
+    pub fn at_xy(&self, x:usize,y:usize) -> Square {
+        self.grid[x][y]
     }
 
     pub fn put(&mut self, coord: Coord, square: Square) {

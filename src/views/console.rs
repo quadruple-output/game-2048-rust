@@ -22,7 +22,7 @@ impl ConsoleView {
     fn show_board(&self, board: &Board) {
         for y in 0..4 {
             for x in 0..4 {
-                match board.grid[x][y] {
+                match board.at_xy(x,y) {
                     Square::Empty => print!("[     ]"),
                     Square::Value(v) => print!("[{0:^5}]", v),
                 }
