@@ -9,22 +9,22 @@ pub enum Command {
 	Right,
 	Left,
 	Up,
-	Down,
+	Down
 }
 
 pub enum GameState {
 	Running,
-	Quit,
+	Quit
 }
 
 pub struct Game {
 	pub board: Board,
-	state: GameState,
+	state:     GameState
 }
 
 impl Game {
 	pub fn new() -> Game {
-		let mut new_game = Game { state: GameState::Running, board: Board::new() };
+		let mut new_game = Game { state: GameState::Running, board: Board::new(4, 3) };
 		new_game.restart();
 		new_game
 	}
@@ -39,7 +39,7 @@ impl Game {
 			Command::New => {
 				self.restart();
 				None
-			}
+			},
 			Command::Quit => {
 				self.state = GameState::Quit;
 				None
@@ -47,21 +47,17 @@ impl Game {
 		}
 	}
 
-	pub fn state(&self) -> &GameState {
-		&self.state
-	}
+	pub fn state(&self) -> &GameState { &self.state }
 
-	fn restart(&mut self) {
-		self.board.initialize();
-	}
+	fn restart(&mut self) { self.board.initialize(); }
 
 	fn shift_left(&mut self) -> Option<Vec<Move>> {
 		match self.board.shift_left() {
 			Ok(moves) => {
 				self.board.new_tile();
 				Some(moves)
-			}
-			Err(_) => None,
+			},
+			Err(_) => None
 		}
 	}
 
@@ -70,8 +66,8 @@ impl Game {
 			Ok(moves) => {
 				self.board.new_tile();
 				Some(moves)
-			}
-			Err(_) => None,
+			},
+			Err(_) => None
 		}
 	}
 
@@ -80,8 +76,8 @@ impl Game {
 			Ok(moves) => {
 				self.board.new_tile();
 				Some(moves)
-			}
-			Err(_) => None,
+			},
+			Err(_) => None
 		}
 	}
 
@@ -90,8 +86,8 @@ impl Game {
 			Ok(moves) => {
 				self.board.new_tile();
 				Some(moves)
-			}
-			Err(_) => None,
+			},
+			Err(_) => None
 		}
 	}
 }

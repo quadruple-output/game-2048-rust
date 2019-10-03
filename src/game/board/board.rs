@@ -31,8 +31,7 @@ impl PartialEq for Board {
 }
 
 impl Board {
-	pub fn new() -> Board {
-		let (size_x, size_y) = (4, 4);
+	pub fn new(size_x: usize, size_y: usize) -> Board {
 		Board { max_x:         size_x - 1,
 		        max_y:         size_y - 1,
 		        grid:          vec![vec![Square::Empty; size_y]; size_x],

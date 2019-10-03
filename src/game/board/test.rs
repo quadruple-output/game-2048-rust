@@ -88,7 +88,7 @@ fn first_column_from_board(board: Board) -> [u16; 4] {
 }
 
 fn board_with_column(column: [u16; 4]) -> Board {
-	let mut board = Board::new();
+	let mut board = Board::new(4, 1);
 	let mut y = 0;
 	for value in column.iter() {
 		board.put(board.coord(0, y), match *value {
