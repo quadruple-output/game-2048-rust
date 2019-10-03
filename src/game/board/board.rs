@@ -6,19 +6,20 @@ use rand::{distributions::IndependentSample, Rng};
 
 #[derive(Clone, Debug)]
 pub struct Board {
-	size: usize, // used as array index -> must be typed 'usize'
-	grid: Vec<Vec<Square>>,
+	max_x:         usize, // used as array index -> must be typed 'usize'
+	max_y:         usize, // used as array index -> must be typed 'usize'
+	grid:          Vec<Vec<Square>>,
 	rand_range_10: rand::distributions::Range<u8>,
-	rng: rand::ThreadRng,
+	rng:           rand::ThreadRng
 }
 
 impl PartialEq for Board {
 	fn eq(&self, other: &Board) -> bool {
-		if self.size != other.size {
+		if self.max_x != other.max_x || self.max_y != other.max_y {
 			false
 		} else {
-			for x in 0..self.size {
-				for y in 0..self.size {
+			for x in 0..self.size_x() {
+				for y in 0..self.size_y() {
 					if self.grid[x][y] != other.grid[x][y] {
 						return false;
 					}
@@ -31,21 +32,18 @@ impl PartialEq for Board {
 
 impl Board {
 	pub fn new() -> Board {
-		let size = 4;
-		Board {
-			size, // TODO: to make this a variable, the type of 'grid' needs to be non-array
-			grid: vec![vec![Square::Empty; size]; size],
-			rand_range_10: rand::distributions::Range::new(0, 10),
-			rng: rand::thread_rng(),
-		}
+		let (size_x, size_y) = (4, 4);
+		Board { max_x:         size_x - 1,
+		        max_y:         size_y - 1,
+		        grid:          vec![vec![Square::Empty; size_y]; size_x],
+		        rand_range_10: rand::distributions::Range::new(0, 10),
+		        rng:           rand::thread_rng() }
 	}
 
-	pub fn coord(&self, x: usize, y: usize) -> Coord {
-		Coord::new(x, y, self.size)
-	}
+	pub fn coord(&self, x: usize, y: usize) -> Coord { Coord::new(x, y, self.max_x, self.max_y) }
 
 	pub fn initialize(&mut self) {
-		self.grid = vec![vec![Square::Empty; self.size]; self.size];
+		self.grid = vec![vec![Square::Empty; self.size_y()]; self.size_x()];
 		self.new_tile();
 	}
 
@@ -74,8 +72,8 @@ impl Board {
 
 	fn find_free_tile(&self, n: usize) -> Coord {
 		let mut count = 0;
-		for x in 0..self.size {
-			for y in 0..self.size {
+		for x in 0..self.size_x() {
+			for y in 0..self.size_y() {
 				if let Empty = self.grid[x][y] {
 					if count == n {
 						return self.coord(x, y);
@@ -87,135 +85,51 @@ impl Board {
 		panic!();
 	}
 
-	pub fn size(&self) -> usize {
-		self.size
-	}
+	pub fn size_x(&self) -> usize { self.max_x + 1 }
 
-	pub fn at(&self, coord: Coord) -> Square {
-		self.at_xy(coord.x, coord.y)
-	}
+	pub fn size_y(&self) -> usize { self.max_y + 1 }
 
-	pub fn at_xy(&self, x: usize, y: usize) -> Square {
-		self.grid[x][y]
-	}
+	pub fn at(&self, coord: Coord) -> Square { self.at_xy(coord.x, coord.y) }
 
-	pub fn put(&mut self, coord: Coord, square: Square) {
-		self.grid[coord.x][coord.y] = square;
-	}
+	pub fn at_xy(&self, x: usize, y: usize) -> Square { self.grid[x][y] }
 
-	fn ten_percent_chance(&mut self) -> bool {
-		self.rand_range_10.ind_sample(&mut self.rng) == 0
-	}
+	pub fn put(&mut self, coord: Coord, square: Square) { self.grid[coord.x][coord.y] = square; }
+
+	fn ten_percent_chance(&mut self) -> bool { self.rand_range_10.ind_sample(&mut self.rng) == 0 }
 
 	pub fn shift_left(&mut self) -> Result<Vec<Move>, ()> {
-		let mut moves = Vec::new();
-		for y in 0..self.size {
-			// todo: parallel execution
-			moves.append(&mut self.contract(self.coord(0, y), Vector { dx: 1, dy: 0 }));
-		}
-		if moves.is_empty() {
-			Err(())
-		} else {
-			Ok(moves)
-		}
+		self.contract_multi((0..=self.max_y).map(|y| self.coord(0, y)).collect(), Vector::new(1, 0))
 	}
 
 	pub fn shift_right(&mut self) -> Result<Vec<Move>, ()> {
-		let mut moves = Vec::new();
-		for y in 0..self.size {
-			// todo: parallel execution
-			moves.append(&mut self.contract(self.coord(self.size - 1, y), Vector { dx: -1, dy: 0 }));
-		}
-		if moves.is_empty() {
-			Err(())
-		} else {
-			Ok(moves)
-		}
+		self.contract_multi((0..=self.max_y).map(|y| self.coord(self.max_x, y)).collect(), Vector::new(-1, 0))
 	}
 
 	pub fn shift_down(&mut self) -> Result<Vec<Move>, ()> {
-		let mut moves = Vec::new();
-		for x in 0..self.size {
-			// todo: parallel execution
-			moves.append(&mut self.contract(self.coord(x, self.size - 1), Vector { dx: 0, dy: -1 }));
-		}
-		if moves.is_empty() {
-			Err(())
-		} else {
-			Ok(moves)
-		}
+		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, self.max_y)).collect(), Vector::new(0, -1))
 	}
 
 	pub fn shift_up(&mut self) -> Result<Vec<Move>, ()> {
-		let mut moves = Vec::new();
-		for x in 0..self.size {
-			// todo: parallel execution
-			moves.append(&mut self.contract(self.coord(x, 0), Vector { dx: 0, dy: 1 }));
-		}
-		if moves.is_empty() {
-			Err(())
-		} else {
-			Ok(moves)
-		}
+		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, 0)).collect(), Vector::new(0, 1))
 	}
 
-	pub fn determine_parallel_moves(&self, starts: Vec<Coord>, direction: Vector) -> Vec<Move> {
-		let mut moves = Vec::with_capacity(self.size * self.size);
+	fn contract_multi(&mut self, starts: Vec<Coord>, direction: Vector) -> Result<Vec<Move>, ()> {
+		let mut moves = Vec::with_capacity(self.size_x() * self.size_y());
 		for start_coord in starts {
-			moves.append(&mut self.determine_moves(DualCursor::new(start_coord, direction)));
+			moves.append(&mut self.contract(DualCursor::new(start_coord, direction)));
 		}
-		moves
+		if moves.is_empty() { Err(()) } else { Ok(moves) }
 	}
 
-	pub fn determine_moves(&self, mut cursor: DualCursor) -> Vec<Move> {
-		let mut moves = Vec::with_capacity(self.size);
-		loop {
-			match self.at(cursor.source) {
-				Empty => {
-					if let Err(_) = cursor.advance_source() {
-						break;
-					};
-				}
-				Value(source_value) => match self.at(cursor.target) {
-					Empty => {
-						moves.push(Move::new(cursor.source, cursor.target, source_value, source_value));
-						if let Err(_) = cursor.advance_source() {
-							break;
-						}
-					}
-					Value(target_value) => {
-						if target_value == source_value {
-							moves.push(Move::new(
-								cursor.source,
-								cursor.target,
-								source_value,
-								source_value + target_value,
-							));
-							if let Err(_) = cursor.advance_both() {
-								break;
-							};
-						} else {
-							if let Err(_) = cursor.advance_target() {
-								break;
-							};
-						}
-					}
-				},
-			}
-		}
-		moves
-	}
-
-	fn contract(&mut self, start: Coord, direction: Vector) -> Vec<Move> {
+	fn contract(&mut self, mut cursor: DualCursor) -> Vec<Move> {
 		let mut result = Vec::new();
-		let mut cursor = DualCursor::new(start, direction);
 		loop {
 			match self.at(cursor.source) {
 				Empty => {
 					if let Err(_) = cursor.advance_source() {
 						break;
 					};
-				}
+				},
 				Value(source_value) => match self.at(cursor.target) {
 					Empty => {
 						result.push(Move::new(cursor.source, cursor.target, source_value, source_value));
@@ -224,15 +138,10 @@ impl Board {
 						if let Err(_) = cursor.advance_source() {
 							break;
 						}
-					}
-					Value(target_value) => {
+					},
+					Value(target_value) =>
 						if target_value == source_value {
-							result.push(Move::new(
-								cursor.source,
-								cursor.target,
-								source_value,
-								source_value + target_value,
-							));
+							result.push(Move::new(cursor.source, cursor.target, source_value, source_value + target_value));
 							self.put(cursor.target, Value(source_value + target_value));
 							self.put(cursor.source, Empty);
 							if let Err(_) = cursor.advance_both() {
@@ -242,9 +151,8 @@ impl Board {
 							if let Err(_) = cursor.advance_target() {
 								break;
 							};
-						}
-					}
-				},
+						},
+				}
 			}
 		}
 		result

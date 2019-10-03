@@ -5,13 +5,12 @@ use std::rc::Rc;
 use super::View;
 use crate::game::{Board, Game, Square};
 
-//
 // NCurses HOWTO: http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
 // man pages: man 3x <function>
 //
 
 pub struct NCursesView {
-	game: Rc<RefCell<Game>>,
+	game: Rc<RefCell<Game>>
 }
 
 impl View for NCursesView {
@@ -24,8 +23,8 @@ impl View for NCursesView {
 		let mut win_height = screen_height - 4;
 		let mut win_width = screen_width - 4;
 		// calculate height of window for optimal symmetry (height-2)%game.size == 0
-		win_height = win_height - (win_height - 2) % game.board.size() as i32; // -2 for borders
-		win_width = win_width - (win_width - 2) % game.board.size() as i32;
+		win_height = win_height - (win_height - 2) % game.board.size_y() as i32; // -2 for borders
+		win_width = win_width - (win_width - 2) % game.board.size_x() as i32;
 		let board_win = nc::subwin(nc::stdscr(), win_height, win_width, 2, 2);
 		nc::box_(board_win, 0, 0);
 		self.show_board_in_window(&game.board, board_win);
@@ -48,17 +47,18 @@ impl NCursesView {
 		nc::getmaxyx(window, &mut win_height, &mut win_width);
 		win_height -= 2; // -2 chars for border
 		win_width -= 2; // -2 chars for border
-		let size = board.size();
-		for x in 0..size {
-			for y in 0..size {
+		let size_x = board.size_x();
+		let size_y = board.size_y();
+		for x in 0..size_x {
+			for y in 0..size_y {
 				nc::wmove(
-					window,
-					1 + ((y as i32 * win_height + win_height / 2) / size as i32),
-					1 + ((x as i32 * win_width + win_width / 2) / size as i32),
+				          window,
+				          1 + ((y as i32 * win_height + win_height / 2) / size_y as i32),
+				          1 + ((x as i32 * win_width + win_width / 2) / size_x as i32)
 				);
 				let label = match board.at_xy(x, y) {
 					Square::Empty => String::new(),
-					Square::Value(value) => value.to_string(),
+					Square::Value(value) => value.to_string()
 				};
 				nc::waddstr(window, &label);
 			}

@@ -2,10 +2,10 @@ use super::coord::Coord;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Move {
-	from: Coord,
-	to: Coord,
-	start_value: u16,
-	end_value: u16,
+	pub from: Coord,
+	pub to: Coord,
+	pub start_value: u16,
+	pub end_value: u16,
 }
 
 impl Move {
