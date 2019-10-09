@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::View;
-use crate::game::{Board, Game, Square};
+use crate::game::{Board, Game, GameState, Square};
 
 // NCurses HOWTO: http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
 // man pages: man 3x <function>
@@ -16,18 +16,26 @@ pub struct NCursesView {
 impl View for NCursesView {
 	fn update(&self) {
 		let game = self.game.borrow();
+		let (mut screen_height, mut screen_width) = (0, 0);
+		let (mut win_height, mut win_width);
 		nc::erase(); // like clear(), but without implicit refresh()
-		let mut screen_height = 0;
-		let mut screen_width = 0;
 		nc::getmaxyx(nc::stdscr(), &mut screen_height, &mut screen_width);
-		let mut win_height = screen_height - 4;
-		let mut win_width = screen_width - 4;
+		win_height = screen_height - 4;
+		win_width = screen_width - 4;
 		// calculate height of window for optimal symmetry (height-2)%game.size == 0
 		win_height = win_height - (win_height - 2) % game.board.size_y() as i32; // -2 for borders
 		win_width = win_width - (win_width - 2) % game.board.size_x() as i32;
 		let board_win = nc::subwin(nc::stdscr(), win_height, win_width, 2, 2);
+		if let GameState::Over = game.state() {
+			nc::wattr_on(board_win, nc::A_BLINK());
+		}
 		nc::box_(board_win, 0, 0);
+		nc::wattr_off(board_win, nc::A_BLINK());
+		if let GameState::Over = game.state() {
+			nc::wattr_on(board_win, nc::A_STANDOUT());
+		}
 		self.show_board_in_window(&game.board, board_win);
+		nc::wattr_off(board_win, nc::A_STANDOUT());
 		nc::refresh();
 		nc::delwin(board_win);
 	}

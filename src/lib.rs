@@ -11,18 +11,18 @@ mod views;
 
 pub enum ViewType {
 	Console,
-	NCurses,
+	NCurses
 }
 
 pub fn run(view_type: ViewType) {
-	let game = Rc::new(RefCell::new(Game::new()));
+	let game = Rc::new(RefCell::new(Game::new(4, 3)));
 	let controller: Box<dyn Controller>;
 
 	match view_type {
 		ViewType::Console => {
 			let view = ConsoleView::new(Rc::clone(&game));
 			controller = Box::new(ConsoleController::new(Rc::clone(&game), view));
-		}
+		},
 		ViewType::NCurses => {
 			let view = NCursesView::new(Rc::clone(&game));
 			controller = Box::new(NCursesController::new(Rc::clone(&game), view));

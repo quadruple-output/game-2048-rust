@@ -14,7 +14,8 @@ pub enum Command {
 
 pub enum GameState {
 	Running,
-	Quit
+	Over, // Game Over - cannot continue playing
+	Quit  // Game ended by user request
 }
 
 pub struct Game {
@@ -23,8 +24,8 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn new() -> Game {
-		let mut new_game = Game { state: GameState::Running, board: Board::new(4, 3) };
+	pub fn new(size_x: usize, size_y: usize) -> Game {
+		let mut new_game = Game { state: GameState::Running, board: Board::new(size_x, size_y) };
 		new_game.restart();
 		new_game
 	}

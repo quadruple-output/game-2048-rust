@@ -31,10 +31,10 @@ impl PartialEq for Board {
 }
 
 impl Board {
-	pub fn new(size_x: usize, size_y: usize) -> Board {
+	pub fn new(size_x: usize, size_y: usize) -> Self {
 		Board { max_x:         size_x - 1,
 		        max_y:         size_y - 1,
-		        grid:          vec![vec![Square::Empty; size_y]; size_x],
+		        grid:          Self::empty_grid(size_x, size_y),
 		        rand_range_10: rand::distributions::Range::new(0, 10),
 		        rng:           rand::thread_rng() }
 	}
@@ -42,8 +42,12 @@ impl Board {
 	pub fn coord(&self, x: usize, y: usize) -> Coord { Coord::new(x, y, self.max_x, self.max_y) }
 
 	pub fn initialize(&mut self) {
-		self.grid = vec![vec![Square::Empty; self.size_y()]; self.size_x()];
+		self.grid = Self::empty_grid(self.size_x(), self.size_y());
 		self.new_tile();
+	}
+
+	fn empty_grid(size_x: usize, size_y: usize) -> Vec<Vec<Square>> {
+		vec![vec![Square::Empty; size_y]; size_x]
 	}
 
 	pub fn new_tile(&mut self) {
