@@ -36,7 +36,11 @@ impl NCursesView {
 
 	pub fn new(game: Rc<RefCell<Game>>) -> Self {
 		nc::initscr();
+		nc::start_color();
 		nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+		nc::init_color(102, 1000, 1000, 0); // yellow
+		nc::init_color(202, 0, 0, 1000); // blue
+		nc::init_pair(2, 102, 202);
 		nc::refresh(); // required for first wrefresh to work
 		NCursesView { game }
 	}
@@ -121,6 +125,8 @@ impl NCursesView {
 
 	fn show_square_in_window(value: u16, window: nc::WINDOW) {
 		let label = value.to_string();
+		nc::wattr_set(window, 0, 2);
+		nc::wbkgdset(window, nc::COLOR_PAIR(2));
 		nc::werase(window);
 		let (win_height, win_width) = window.size();
 		if win_height >= 3 && win_width >= 6 {

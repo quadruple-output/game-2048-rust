@@ -71,7 +71,7 @@ fn shift(column: [u16; 4]) -> [u16; 4] {
 	let mut board = board_with_column(column);
 	board
         .shift_up()
-        .or_else::<(), _>(|_| Ok(Vec::new())) // unfortunately, we need a type annotation here
+        .or_else(|| Some(Vec::new())) // unfortunately, we need a type annotation here
         .unwrap();
 	first_column_from_board(board)
 }
@@ -88,7 +88,7 @@ fn first_column_from_board(board: Board) -> [u16; 4] {
 }
 
 fn board_with_column(column: [u16; 4]) -> Board {
-	let mut board = Board::new(4, 1);
+	let mut board = Board::new(1, 4);
 	let mut y = 0;
 	for value in column.iter() {
 		board.put(board.coord(0, y), match *value {

@@ -101,45 +101,52 @@ impl Board {
 
 	fn ten_percent_chance(&mut self) -> bool { self.rand_range_10.ind_sample(&mut self.rng) == 0 }
 
-	pub fn shift_left(&mut self) -> Result<Vec<Move>, ()> {
+	pub fn shift_left(&mut self) -> Option<Vec<Move>> {
 		self.contract_multi((0..=self.max_y).map(|y| self.coord(0, y)).collect(), Vector::new(1, 0))
 	}
 
-	pub fn shift_right(&mut self) -> Result<Vec<Move>, ()> {
+	pub fn shift_right(&mut self) -> Option<Vec<Move>> {
 		self.contract_multi((0..=self.max_y).map(|y| self.coord(self.max_x, y)).collect(), Vector::new(-1, 0))
 	}
 
-	pub fn shift_down(&mut self) -> Result<Vec<Move>, ()> {
+	pub fn shift_down(&mut self) -> Option<Vec<Move>> {
 		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, self.max_y)).collect(), Vector::new(0, -1))
 	}
 
-	pub fn shift_up(&mut self) -> Result<Vec<Move>, ()> {
+	pub fn shift_up(&mut self) -> Option<Vec<Move>> {
 		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, 0)).collect(), Vector::new(0, 1))
 	}
 
-	fn contract_multi(&mut self, starts: Vec<Coord>, direction: Vector) -> Result<Vec<Move>, ()> {
+	fn contract_multi(&mut self, starts: Vec<Coord>, direction: Vector) -> Option<Vec<Move>> {
 		let mut moves = Vec::with_capacity(self.size_x() * self.size_y());
 		for start_coord in starts {
 			moves.append(&mut self.contract(DualCursor::new(start_coord, direction)));
 		}
-		if moves.is_empty() { Err(()) } else { Ok(moves) }
+		// Return moves only if there are any _real_ moves:
+		for mv in moves.iter() {
+			match mv {
+				Move::Stay { at: _, value: _ } => (),
+				_ => return Some(moves)
+			}
+		}
+		None
 	}
 
 	fn contract(&mut self, mut cursor: DualCursor) -> Vec<Move> {
-		let mut result = Vec::new();
+		let mut moves = Vec::new();
 		loop {
 			match self.at(cursor.source) {
 				Empty => {
 					if let Err(_) = cursor.advance_source() {
 						if let Value(target_value) = self.at(cursor.target) {
-							result.push(Move::Stay { at: cursor.target, value: target_value });
+							moves.push(Move::Stay { at: cursor.target, value: target_value });
 						}
 						break;
 					};
 				},
 				Value(source_value) => match self.at(cursor.target) {
 					Empty => {
-						result.push(Move::Shift { from: cursor.source, to: cursor.target, value: source_value });
+						moves.push(Move::Shift { from: cursor.source, to: cursor.target, value: source_value });
 						self.put(cursor.target, Value(source_value));
 						self.put(cursor.source, Empty);
 						if let Err(_) = cursor.advance_source() {
@@ -148,26 +155,26 @@ impl Board {
 					},
 					Value(target_value) =>
 						if target_value == source_value {
-							result.push(Move::Merge { from:        cursor.source,
-							                          to:          cursor.target,
-							                          start_value: source_value,
-							                          end_value:   source_value + target_value });
+							moves.push(Move::Merge { from:        cursor.source,
+							                         to:          cursor.target,
+							                         start_value: source_value,
+							                         end_value:   source_value + target_value });
 							self.put(cursor.target, Value(source_value + target_value));
 							self.put(cursor.source, Empty);
 							if let Err(_) = cursor.advance_both() {
 								break;
 							};
 						} else {
-							result.push(Move::Stay { at: cursor.target, value: target_value });
+							moves.push(Move::Stay { at: cursor.target, value: target_value });
 							if let Err(_) = cursor.advance_target() {
 								// reached end of board while target has a value
-								result.push(Move::Stay { at: cursor.source, value: source_value });
+								moves.push(Move::Stay { at: cursor.source, value: source_value });
 								break;
 							};
 						},
 				}
 			}
 		}
-		result
+		moves
 	}
 }

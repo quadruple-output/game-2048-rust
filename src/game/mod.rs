@@ -58,41 +58,41 @@ impl Game {
 
 	fn shift_left(&mut self) -> Option<Vec<Move>> {
 		match self.board.shift_left() {
-			Ok(mut moves) => {
+			Some(mut moves) => {
 				moves.push(self.board.new_tile());
 				Some(moves)
 			},
-			Err(_) => None
+			None => None
 		}
 	}
 
 	fn shift_right(&mut self) -> Option<Vec<Move>> {
 		match self.board.shift_right() {
-			Ok(mut moves) => {
+			Some(mut moves) => {
 				moves.push(self.board.new_tile());
 				Some(moves)
 			},
-			Err(_) => None
+			None => None
 		}
 	}
 
 	fn shift_up(&mut self) -> Option<Vec<Move>> {
 		match self.board.shift_up() {
-			Ok(mut moves) => {
+			Some(mut moves) => {
 				moves.push(self.board.new_tile());
 				Some(moves)
 			},
-			Err(_) => None
+			None => None
 		}
 	}
 
 	fn shift_down(&mut self) -> Option<Vec<Move>> {
 		match self.board.shift_down() {
-			Ok(mut moves) => {
+			Some(mut moves) => {
 				moves.push(self.board.new_tile());
 				Some(moves)
 			},
-			Err(_) => None
+			None => None
 		}
 	}
 }
