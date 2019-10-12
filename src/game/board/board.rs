@@ -41,16 +41,16 @@ impl Board {
 
 	pub fn coord(&self, x: usize, y: usize) -> Coord { Coord::new(x, y, self.max_x, self.max_y) }
 
-	pub fn initialize(&mut self) {
+	pub fn initialize(&mut self) -> Move {
 		self.grid = Self::empty_grid(self.size_x(), self.size_y());
-		self.new_tile();
+		self.new_tile()
 	}
 
 	fn empty_grid(size_x: usize, size_y: usize) -> Vec<Vec<Square>> {
 		vec![vec![Square::Empty; size_y]; size_x]
 	}
 
-	pub fn new_tile(&mut self) {
+	pub fn new_tile(&mut self) -> Move {
 		let num_free_tiles = self.num_free_tiles();
 		if num_free_tiles == 0 {
 			panic!("tried to place a new tile on a full board")
@@ -59,6 +59,7 @@ impl Board {
 		let rnd_free_coord = self.find_free_tile(n);
 		let new_value = if self.ten_percent_chance() { 4 } else { 2 };
 		self.put(rnd_free_coord, Value(new_value));
+		Move::Appear { at: rnd_free_coord, value: new_value }
 	}
 
 	fn num_free_tiles(&self) -> usize {
@@ -130,12 +131,15 @@ impl Board {
 			match self.at(cursor.source) {
 				Empty => {
 					if let Err(_) = cursor.advance_source() {
+						if let Value(target_value) = self.at(cursor.target) {
+							result.push(Move::Stay { at: cursor.target, value: target_value });
+						}
 						break;
 					};
 				},
 				Value(source_value) => match self.at(cursor.target) {
 					Empty => {
-						result.push(Move::new(cursor.source, cursor.target, source_value, source_value));
+						result.push(Move::Shift { from: cursor.source, to: cursor.target, value: source_value });
 						self.put(cursor.target, Value(source_value));
 						self.put(cursor.source, Empty);
 						if let Err(_) = cursor.advance_source() {
@@ -144,14 +148,20 @@ impl Board {
 					},
 					Value(target_value) =>
 						if target_value == source_value {
-							result.push(Move::new(cursor.source, cursor.target, source_value, source_value + target_value));
+							result.push(Move::Merge { from:        cursor.source,
+							                          to:          cursor.target,
+							                          start_value: source_value,
+							                          end_value:   source_value + target_value });
 							self.put(cursor.target, Value(source_value + target_value));
 							self.put(cursor.source, Empty);
 							if let Err(_) = cursor.advance_both() {
 								break;
 							};
 						} else {
+							result.push(Move::Stay { at: cursor.target, value: target_value });
 							if let Err(_) = cursor.advance_target() {
+								// reached end of board while target has a value
+								result.push(Move::Stay { at: cursor.source, value: source_value });
 								break;
 							};
 						},

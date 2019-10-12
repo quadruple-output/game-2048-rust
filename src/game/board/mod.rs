@@ -6,6 +6,7 @@ mod r#move;
 mod test;
 
 pub use board::Board;
+pub use coord::Coord;
 pub use r#move::Move;
 
 #[derive(Copy, Clone)] // needed for easy Board initialization
@@ -13,5 +14,5 @@ pub use r#move::Move;
 #[derive(PartialEq)] // needed for tests
 pub enum Square {
 	Empty,
-	Value(u16),
+	Value(u16)
 }

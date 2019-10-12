@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::View;
-use crate::game::{Game, Square};
+use crate::game::{Coord, Game, Move};
 
 // NCurses HOWTO: http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
 // man pages: man 3x <function>
@@ -82,35 +82,45 @@ impl NCursesView {
 	}
 
 	fn show_board_in_window(&self, window: nc::WINDOW) {
-		let board = &self.game.borrow().board;
+		let game = self.game.borrow();
 
-		let size_x = board.size_x();
-		let size_y = board.size_y();
-		for x in 0..size_x {
-			for y in 0..size_y {
-				let square_window = self.position_square_in(x, y, window);
-				Self::show_square_in_window(&board.at_xy(x, y), square_window);
+		for r#move in game.latest_moves().iter() {
+			let (end_coord, end_value);
+			match r#move {
+				Move::Appear { at, value } => {
+					end_coord = at;
+					end_value = value;
+				},
+				Move::Shift { from: _, to, value } => {
+					end_coord = to;
+					end_value = value;
+				},
+				Move::Merge { from: _, to, start_value: _, end_value: v2 } => {
+					end_coord = to;
+					end_value = v2;
+				},
+				Move::Stay { at, value } => {
+					end_coord = at;
+					end_value = value;
+				}
 			}
+			let square_window = self.position_square_in(*end_coord, window);
+			Self::show_square_in_window(*end_value, square_window);
 		}
 	}
 
-	fn position_square_in(&self, square_x: usize, square_y: usize, window: nc::WINDOW) -> nc::WINDOW {
-		//(y as i32 * win_height + win_height / 2) / size_y as i32,
-		// 			              (x as i32 * win_width + win_width / 2) / size_x as i32,
+	fn position_square_in(&self, coord: Coord, window: nc::WINDOW) -> nc::WINDOW {
 		let (win_height, win_width) = window.size();
 		let board = &self.game.borrow().board;
-		let top = (square_y as i32 * win_height) / board.size_y() as i32;
-		let bottom = ((square_y as i32 + 1) * win_height) / board.size_y() as i32;
-		let left = (square_x as i32 * win_width) / board.size_x() as i32;
-		let right = ((square_x as i32 + 1) * win_width) / board.size_x() as i32;
+		let top = (coord.y as i32 * win_height) / board.size_y() as i32;
+		let bottom = ((coord.y as i32 + 1) * win_height) / board.size_y() as i32;
+		let left = (coord.x as i32 * win_width) / board.size_x() as i32;
+		let right = ((coord.x as i32 + 1) * win_width) / board.size_x() as i32;
 		nc::derwin(window, bottom - top, right - left, top, left)
 	}
 
-	fn show_square_in_window(square: &Square, window: nc::WINDOW) {
-		let label = match square {
-			Square::Empty => String::new(),
-			Square::Value(value) => value.to_string()
-		};
+	fn show_square_in_window(value: u16, window: nc::WINDOW) {
+		let label = value.to_string();
 		nc::werase(window);
 		let (win_height, win_width) = window.size();
 		if win_height >= 3 && win_width >= 6 {
