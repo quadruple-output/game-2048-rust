@@ -2,15 +2,18 @@ use ncurses as nc;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use super::View;
+use super::pallete::Pallete;
+
 use crate::game::{Coord, Game, Move};
+use crate::views::View;
 
 // NCurses HOWTO: http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
 // man pages: man 3x <function>
 //
 
 pub struct NCursesView {
-	game: Rc<RefCell<Game>>
+	game:    Rc<RefCell<Game>>,
+	pallete: Pallete
 }
 
 impl View for NCursesView {
@@ -38,11 +41,8 @@ impl NCursesView {
 		nc::initscr();
 		nc::start_color();
 		nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-		nc::init_color(102, 1000, 1000, 0); // yellow
-		nc::init_color(202, 0, 0, 1000); // blue
-		nc::init_pair(2, 102, 202);
 		nc::refresh(); // required for first wrefresh to work
-		NCursesView { game }
+		NCursesView { game, pallete: Pallete::new() }
 	}
 
 	fn position_board_box_in(&self, window: nc::WINDOW) -> nc::WINDOW {
@@ -109,7 +109,7 @@ impl NCursesView {
 				}
 			}
 			let square_window = self.position_square_in(*end_coord, window);
-			Self::show_square_in_window(*end_value, square_window);
+			self.show_square_in_window(*end_value, square_window);
 		}
 	}
 
@@ -123,10 +123,10 @@ impl NCursesView {
 		nc::derwin(window, bottom - top, right - left, top, left)
 	}
 
-	fn show_square_in_window(value: u16, window: nc::WINDOW) {
+	fn show_square_in_window(&self, value: u16, window: nc::WINDOW) {
 		let label = value.to_string();
 		nc::wattr_set(window, 0, 2);
-		nc::wbkgdset(window, nc::COLOR_PAIR(2));
+		nc::wbkgdset(window, self.pallete.get_pair_for_square_value(value));
 		nc::werase(window);
 		let (win_height, win_width) = window.size();
 		if win_height >= 3 && win_width >= 6 {

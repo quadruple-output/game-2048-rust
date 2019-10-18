@@ -15,7 +15,7 @@ pub enum ViewType {
 }
 
 pub fn run(view_type: ViewType) {
-	let game = Rc::new(RefCell::new(Game::new(3, 3)));
+	let game = Rc::new(RefCell::new(Game::new(5, 5)));
 	let controller: Box<dyn Controller>;
 
 	match view_type {
