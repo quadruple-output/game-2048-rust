@@ -92,41 +92,41 @@ impl NCursesView {
 		(height_mod_game_size, width_mod_game_size)
 	}
 
-	fn show_board_in_window(&self, window: nc::WINDOW, t: f32) {
+	fn show_board_in_window(&self, board_window: nc::WINDOW, t: f32) {
 		let game = self.game.borrow();
 
 		for r#move in game.latest_moves().iter() {
 			match r#move {
 				Move::Appear { at, value } =>
 					if t == 1.0 {
-						let square_window = self.position_square_in(*at, *at, window, t);
+						let square_window = self.position_square_in(*at, *at, board_window, t);
 						self.show_square_in_window(*value, square_window);
 					},
 				Move::Shift { from, to, value } => {
-					let square_window = self.position_square_in(*from, *to, window, t);
+					let square_window = self.position_square_in(*from, *to, board_window, t);
 					self.show_square_in_window(*value, square_window);
 				},
 				Move::Merge { from, to, start_value, end_value } =>
 					if t == 1.0 {
-						let square_window = self.position_square_in(*from, *to, window, t);
+						let square_window = self.position_square_in(*from, *to, board_window, t);
 						self.show_square_in_window(*end_value, square_window);
 					} else {
-						let square_window_from = self.position_square_in(*from, *to, window, t);
-						let square_window_to = self.position_square_in(*from, *to, window, 1.0);
-						self.show_square_in_window(*start_value, square_window_to);
+						// let square_window_to = self.position_square_in(*from, *to, board_window,
+						// 1.0); self.show_square_in_window(*start_value, square_window_to);
+						let square_window_from = self.position_square_in(*from, *to, board_window, t);
 						self.show_square_in_window(*start_value, square_window_from);
 					},
 				Move::Stay { at, value } => {
-					let square_window = self.position_square_in(*at, *at, window, t);
+					let square_window = self.position_square_in(*at, *at, board_window, t);
 					self.show_square_in_window(*value, square_window);
 				}
 			}
 		}
 	}
 
-	fn position_square_in(&self, start_coord: Coord, end_coord: Coord, window: nc::WINDOW, t: f32)
+	fn position_square_in(&self, start_coord: Coord, end_coord: Coord, board_window: nc::WINDOW, t: f32)
 	                      -> nc::WINDOW {
-		let (win_height, win_width) = window.size();
+		let (win_height, win_width) = board_window.size();
 		let board = &self.game.borrow().board;
 		let start_top = (start_coord.y as i32 * win_height) / board.size_y() as i32;
 		let start_left = (start_coord.x as i32 * win_width) / board.size_x() as i32;
@@ -140,7 +140,7 @@ impl NCursesView {
 		let left = self.interpolate(start_left, end_left, t);
 		let bottom = self.interpolate(start_bottom, end_bottom, t);
 		let right = self.interpolate(start_right, end_right, t);
-		nc::derwin(window, bottom - top, right - left, top, left)
+		nc::derwin(board_window, bottom - top, right - left, top, left)
 	}
 
 	pub fn interpolate(&self, a: i32, b: i32, t: f32) -> i32 { a + (t * (b as f32 - a as f32)) as i32 }
@@ -149,6 +149,7 @@ impl NCursesView {
 		let label = value.to_string();
 		nc::wattr_set(window, 0, 2);
 		nc::wbkgdset(window, self.pallete.get_pair_for_square_value(value));
+		nc::touchwin(window); // attempt to fix broken rendering. suggested in 'man 3x wrefresh' for window overlaps
 		nc::werase(window);
 		let (win_height, win_width) = window.size();
 		if win_height >= 3 && win_width >= 6 {

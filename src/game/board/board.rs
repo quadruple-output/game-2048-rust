@@ -134,12 +134,15 @@ impl Board {
 
 	fn contract(&mut self, mut cursor: DualCursor) -> Vec<Move> {
 		let mut moves = Vec::new();
+		let mut target_changed = false;
 		loop {
 			match self.at(cursor.source) {
 				Empty => {
 					if let Err(_) = cursor.advance_source() {
-						if let Value(target_value) = self.at(cursor.target) {
-							moves.push(Move::Stay { at: cursor.target, value: target_value });
+						if !target_changed {
+							if let Value(target_value) = self.at(cursor.target) {
+								moves.push(Move::Stay { at: cursor.target, value: target_value });
+							}
 						}
 						break;
 					};
@@ -149,12 +152,16 @@ impl Board {
 						moves.push(Move::Shift { from: cursor.source, to: cursor.target, value: source_value });
 						self.put(cursor.target, Value(source_value));
 						self.put(cursor.source, Empty);
+						target_changed = true;
 						if let Err(_) = cursor.advance_source() {
 							break;
 						}
 					},
 					Value(target_value) =>
 						if target_value == source_value {
+							if !target_changed {
+								moves.push(Move::Stay { at: cursor.target, value: target_value });
+							}
 							moves.push(Move::Merge { from:        cursor.source,
 							                         to:          cursor.target,
 							                         start_value: source_value,
@@ -164,13 +171,17 @@ impl Board {
 							if let Err(_) = cursor.advance_both() {
 								break;
 							};
+							target_changed = false;
 						} else {
-							moves.push(Move::Stay { at: cursor.target, value: target_value });
+							if !target_changed {
+								moves.push(Move::Stay { at: cursor.target, value: target_value });
+							}
 							if let Err(_) = cursor.advance_target() {
 								// reached end of board while target has a value
 								moves.push(Move::Stay { at: cursor.source, value: source_value });
 								break;
 							};
+							target_changed = false;
 						},
 				}
 			}
