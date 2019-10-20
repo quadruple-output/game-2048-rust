@@ -47,6 +47,8 @@ impl Game {
 			}
 		} {
 			self.latest_moves = new_moves;
+		} else {
+			self.latest_moves = Vec::new();
 		}
 	}
 

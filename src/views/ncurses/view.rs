@@ -2,6 +2,7 @@ use ncurses as nc;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use super::animator::Animator;
 use super::pallete::Pallete;
 
 use crate::game::{Coord, Game, Move};
@@ -12,8 +13,9 @@ use crate::views::View;
 //
 
 pub struct NCursesView {
-	game:    Rc<RefCell<Game>>,
-	pallete: Pallete
+	game:     Rc<RefCell<Game>>,
+	pallete:  Pallete,
+	animator: Animator
 }
 
 impl View for NCursesView {
@@ -28,9 +30,14 @@ impl View for NCursesView {
 		// 		if let GameState::Over = game.state() {
 		// 			nc::wattr_on(board_win, nc::A_STANDOUT());
 		// 		}
-		self.show_board_in_window(board_window);
 		// 		nc::wattr_off(board_win, nc::A_STANDOUT());
-		nc::refresh();
+		nc::wnoutrefresh(nc::stdscr());
+		self.animator.animate(|t| {
+			             nc::werase(board_window);
+			             self.show_board_in_window(board_window, t);
+			             nc::wnoutrefresh(board_window);
+			             nc::doupdate();
+		             });
 	}
 }
 
@@ -42,7 +49,7 @@ impl NCursesView {
 		nc::start_color();
 		nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
 		nc::refresh(); // required for first wrefresh to work
-		NCursesView { game, pallete: Pallete::new() }
+		NCursesView { game, pallete: Pallete::new(), animator: Animator::new(0.5, 10) }
 	}
 
 	fn position_board_box_in(&self, window: nc::WINDOW) -> nc::WINDOW {
@@ -85,43 +92,58 @@ impl NCursesView {
 		(height_mod_game_size, width_mod_game_size)
 	}
 
-	fn show_board_in_window(&self, window: nc::WINDOW) {
+	fn show_board_in_window(&self, window: nc::WINDOW, t: f32) {
 		let game = self.game.borrow();
 
 		for r#move in game.latest_moves().iter() {
-			let (end_coord, end_value);
 			match r#move {
-				Move::Appear { at, value } => {
-					end_coord = at;
-					end_value = value;
+				Move::Appear { at, value } =>
+					if t == 1.0 {
+						let square_window = self.position_square_in(*at, *at, window, t);
+						self.show_square_in_window(*value, square_window);
+					},
+				Move::Shift { from, to, value } => {
+					let square_window = self.position_square_in(*from, *to, window, t);
+					self.show_square_in_window(*value, square_window);
 				},
-				Move::Shift { from: _, to, value } => {
-					end_coord = to;
-					end_value = value;
-				},
-				Move::Merge { from: _, to, start_value: _, end_value: v2 } => {
-					end_coord = to;
-					end_value = v2;
-				},
+				Move::Merge { from, to, start_value, end_value } =>
+					if t == 1.0 {
+						let square_window = self.position_square_in(*from, *to, window, t);
+						self.show_square_in_window(*end_value, square_window);
+					} else {
+						let square_window_from = self.position_square_in(*from, *to, window, t);
+						let square_window_to = self.position_square_in(*from, *to, window, 1.0);
+						self.show_square_in_window(*start_value, square_window_to);
+						self.show_square_in_window(*start_value, square_window_from);
+					},
 				Move::Stay { at, value } => {
-					end_coord = at;
-					end_value = value;
+					let square_window = self.position_square_in(*at, *at, window, t);
+					self.show_square_in_window(*value, square_window);
 				}
 			}
-			let square_window = self.position_square_in(*end_coord, window);
-			self.show_square_in_window(*end_value, square_window);
 		}
 	}
 
-	fn position_square_in(&self, coord: Coord, window: nc::WINDOW) -> nc::WINDOW {
+	fn position_square_in(&self, start_coord: Coord, end_coord: Coord, window: nc::WINDOW, t: f32)
+	                      -> nc::WINDOW {
 		let (win_height, win_width) = window.size();
 		let board = &self.game.borrow().board;
-		let top = (coord.y as i32 * win_height) / board.size_y() as i32;
-		let bottom = ((coord.y as i32 + 1) * win_height) / board.size_y() as i32;
-		let left = (coord.x as i32 * win_width) / board.size_x() as i32;
-		let right = ((coord.x as i32 + 1) * win_width) / board.size_x() as i32;
+		let start_top = (start_coord.y as i32 * win_height) / board.size_y() as i32;
+		let start_left = (start_coord.x as i32 * win_width) / board.size_x() as i32;
+		let start_bottom = ((start_coord.y as i32 + 1) * win_height) / board.size_y() as i32;
+		let start_right = ((start_coord.x as i32 + 1) * win_width) / board.size_x() as i32;
+		let end_top = (end_coord.y as i32 * win_height) / board.size_y() as i32;
+		let end_left = (end_coord.x as i32 * win_width) / board.size_x() as i32;
+		let end_bottom = ((end_coord.y as i32 + 1) * win_height) / board.size_y() as i32;
+		let end_right = ((end_coord.x as i32 + 1) * win_width) / board.size_x() as i32;
+		let top = self.interpolate(start_top, end_top, t);
+		let left = self.interpolate(start_left, end_left, t);
+		let bottom = self.interpolate(start_bottom, end_bottom, t);
+		let right = self.interpolate(start_right, end_right, t);
 		nc::derwin(window, bottom - top, right - left, top, left)
 	}
+
+	pub fn interpolate(&self, a: i32, b: i32, t: f32) -> i32 { a + (t * (b as f32 - a as f32)) as i32 }
 
 	fn show_square_in_window(&self, value: u16, window: nc::WINDOW) {
 		let label = value.to_string();

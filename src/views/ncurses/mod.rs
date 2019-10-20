@@ -1,3 +1,4 @@
+mod animator;
 mod pallete;
 mod view;
 
