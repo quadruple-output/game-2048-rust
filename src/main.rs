@@ -1,46 +1,37 @@
 use std::cmp::Ordering::*;
 use std::env;
 
-use game2048::{run, ViewType};
+use game2048::{run, ViewType, ViewType::*};
 
-struct Config {
-	prog_name:    String,
-	show_version: bool,
-	show_usage:   bool,
-	view_type:    ViewType
+enum Config {
+	Play { view_type: ViewType },
+	ShowVersion,
+	ShowUsage { cmd_name: String }
 }
 
 impl Config {
 	pub fn from_args(args: Vec<String>) -> Self {
-		// default values:
-		let mut show_usage = false;
-		let mut show_version = false;
-		let mut view_type = ViewType::NCurses;
-		// read command line args:
 		match args.len().cmp(&2) {
-			Less => {},
+			Less => return Self::Play { view_type: NCurses },
 			Equal => match args[1].as_str() {
-				"-v" => show_version = true,
-				"-c" => view_type = ViewType::Console,
-				_ => show_usage = true
+				"-v" => return Self::ShowVersion,
+				"-c" => return Self::Play { view_type: Console },
+				_ => {}
 			},
-			Greater => show_usage = true
+			Greater => {}
 		};
-		Config { prog_name: args[0].clone(), show_version, show_usage, view_type }
+		Self::ShowUsage { cmd_name: args[0].clone() }
 	}
 }
 
 fn main() {
-	let config = Config::from_args(env::args().collect());
-	if config.show_usage {
-		println!("Usage: {} [-v|-c]", config.prog_name);
-		println!("  -v : show version");
-		println!("  -c : use plain console output instead of ncurses library")
-	}
-	if config.show_version {
-		println!("Game2048 by Ivo.  V 0.1.0");
-	}
-	if !config.show_usage && !config.show_version {
-		run(config.view_type);
+	match Config::from_args(env::args().collect()) {
+		Config::Play { view_type } => run(view_type),
+		Config::ShowVersion => println!("Game2048 by Ivo.  V 0.1.0"),
+		Config::ShowUsage { cmd_name } => {
+			println!("Usage: {} [-v|-c]", cmd_name);
+			println!("  -v : show version");
+			println!("  -c : use plain console output instead of ncurses library")
+		}
 	}
 }
