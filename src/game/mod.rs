@@ -14,8 +14,8 @@ pub enum Command {
 
 pub enum GameState {
 	Running,
-	Over, // Game Over - cannot continue playing
-	Quit  // Game ended by user request
+	// Over, // Game Over - cannot continue playing
+	Quit // Game ended by user request
 }
 
 pub struct Game {

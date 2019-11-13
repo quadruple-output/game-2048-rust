@@ -123,9 +123,10 @@ impl Board {
 			moves.append(&mut self.contract(DualCursor::new(start_coord, direction)));
 		}
 		// Return moves only if there are any _real_ moves:
+		// TODO: reduce to single statement (filter_map?)
 		for mv in moves.iter() {
 			match mv {
-				Move::Stay { at: _, value: _ } => (),
+				Move::Stay { .. } => (),
 				_ => return Some(moves)
 			}
 		}
@@ -138,7 +139,7 @@ impl Board {
 		loop {
 			match self.at(cursor.source) {
 				Empty => {
-					if let Err(_) = cursor.advance_source() {
+					if cursor.advance_source().is_err() {
 						if !target_changed {
 							if let Value(target_value) = self.at(cursor.target) {
 								moves.push(Move::Stay { at: cursor.target, value: target_value });
@@ -153,7 +154,7 @@ impl Board {
 						self.put(cursor.target, Value(source_value));
 						self.put(cursor.source, Empty);
 						target_changed = true;
-						if let Err(_) = cursor.advance_source() {
+						if cursor.advance_source().is_err() {
 							break;
 						}
 					},
@@ -168,7 +169,7 @@ impl Board {
 							                         end_value:   source_value + target_value });
 							self.put(cursor.target, Value(source_value + target_value));
 							self.put(cursor.source, Empty);
-							if let Err(_) = cursor.advance_both() {
+							if cursor.advance_both().is_err() {
 								break;
 							};
 							target_changed = false;
@@ -176,7 +177,7 @@ impl Board {
 							if !target_changed {
 								moves.push(Move::Stay { at: cursor.target, value: target_value });
 							}
-							if let Err(_) = cursor.advance_target() {
+							if cursor.advance_target().is_err() {
 								// reached end of board while target has a value
 								moves.push(Move::Stay { at: cursor.source, value: source_value });
 								break;

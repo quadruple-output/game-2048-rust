@@ -1,11 +1,11 @@
-mod board;
+mod _board;
 mod coord;
 mod cursor;
 mod r#move;
 #[cfg(test)]
 mod test;
 
-pub use board::Board;
+pub use _board::Board;
 pub use coord::Coord;
 pub use r#move::Move;
 

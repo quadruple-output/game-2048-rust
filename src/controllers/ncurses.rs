@@ -8,11 +8,11 @@ use crate::views::{NCursesView, View};
 
 pub struct NCursesController {
 	game: Rc<RefCell<Game>>,
-	view: NCursesView,
+	view: NCursesView
 }
 
 impl NCursesController {
-	pub fn new(game: Rc<RefCell<Game>>, view: NCursesView) -> impl Controller {
+	pub fn create(game: Rc<RefCell<Game>>, view: NCursesView) -> impl Controller {
 		nc::cbreak();
 		nc::keypad(nc::stdscr(), true);
 		nc::noecho();
@@ -21,17 +21,11 @@ impl NCursesController {
 }
 
 impl Controller for NCursesController {
-	fn view(&self) -> &dyn View {
-		&self.view
-	}
+	fn view(&self) -> &dyn View { &self.view }
 
-	fn game(&self) -> Ref<Game> {
-		self.game.borrow()
-	}
+	fn game(&self) -> Ref<Game> { self.game.borrow() }
 
-	fn mut_game(&self) -> RefMut<Game> {
-		self.game.borrow_mut()
-	}
+	fn mut_game(&self) -> RefMut<Game> { self.game.borrow_mut() }
 
 	fn receive_command(&self) -> Command {
 		loop {
@@ -42,12 +36,12 @@ impl Controller for NCursesController {
 				nc::KEY_RIGHT => break Command::Right,
 				nc::KEY_UP => break Command::Up,
 				nc::KEY_DOWN => break Command::Down,
-				_ => (),
+				_ => ()
 			}
 			match key as u8 as char {
 				'n' | 'N' => break Command::New,
 				'q' | 'Q' => break Command::Quit,
-				_ => (),
+				_ => ()
 			}
 		}
 	}

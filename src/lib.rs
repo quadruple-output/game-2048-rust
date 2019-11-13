@@ -21,11 +21,11 @@ pub fn run(view_type: ViewType) {
 	match view_type {
 		ViewType::Console => {
 			let view = ConsoleView::new(Rc::clone(&game));
-			controller = Box::new(ConsoleController::new(Rc::clone(&game), view));
+			controller = Box::new(ConsoleController::create(Rc::clone(&game), view));
 		},
 		ViewType::NCurses => {
 			let view = NCursesView::new(Rc::clone(&game));
-			controller = Box::new(NCursesController::new(Rc::clone(&game), view));
+			controller = Box::new(NCursesController::create(Rc::clone(&game), view));
 		}
 	}
 

@@ -23,7 +23,7 @@ impl ConsoleView {
 					Square::Value(v) => print!("[{0:^5}]", v)
 				}
 			}
-			println!("");
+			println!();
 		}
 	}
 }

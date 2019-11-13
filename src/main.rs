@@ -1,28 +1,31 @@
+use std::cmp::Ordering::*;
 use std::env;
 
 use game2048::{run, ViewType};
 
-pub struct Config {
-	prog_name: String,
+struct Config {
+	prog_name:    String,
 	show_version: bool,
-	show_usage: bool,
-	view_type: ViewType,
+	show_usage:   bool,
+	view_type:    ViewType
 }
 
 impl Config {
 	pub fn from_args(args: Vec<String>) -> Self {
+		// default values:
 		let mut show_usage = false;
 		let mut show_version = false;
 		let mut view_type = ViewType::NCurses;
-		if args.len() > 2 {
-			show_usage = true;
-		} else if args.len() == 2 {
-			match args[1].as_str() {
+		// read command line args:
+		match args.len().cmp(&2) {
+			Less => {},
+			Equal => match args[1].as_str() {
 				"-v" => show_version = true,
 				"-c" => view_type = ViewType::Console,
-				_ => show_usage = true,
-			}
-		}
+				_ => show_usage = true
+			},
+			Greater => show_usage = true
+		};
 		Config { prog_name: args[0].clone(), show_version, show_usage, view_type }
 	}
 }

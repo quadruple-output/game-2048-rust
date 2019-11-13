@@ -8,27 +8,21 @@ use crate::views::{ConsoleView, View};
 
 pub struct ConsoleController {
 	game: Rc<RefCell<Game>>,
-	view: ConsoleView,
+	view: ConsoleView
 }
 
 impl ConsoleController {
-	pub fn new(game: Rc<RefCell<Game>>, view: ConsoleView) -> impl Controller {
+	pub fn create(game: Rc<RefCell<Game>>, view: ConsoleView) -> impl Controller {
 		ConsoleController { game, view }
 	}
 }
 
 impl Controller for ConsoleController {
-	fn view(&self) -> &dyn View {
-		&self.view
-	}
+	fn view(&self) -> &dyn View { &self.view }
 
-	fn game(&self) -> Ref<Game> {
-		self.game.borrow()
-	}
+	fn game(&self) -> Ref<Game> { self.game.borrow() }
 
-	fn mut_game(&self) -> RefMut<Game> {
-		self.game.borrow_mut()
-	}
+	fn mut_game(&self) -> RefMut<Game> { self.game.borrow_mut() }
 
 	fn receive_command(&self) -> Command {
 		let mut cmd;
@@ -42,7 +36,7 @@ impl Controller for ConsoleController {
 					"d" => break Command::Right,
 					"n" => break Command::New,
 					"q" => break Command::Quit,
-					_ => println!("what?"), // restarts the loop
+					_ => println!("what?") // restarts the loop
 				},
 				Err(msg) => {
 					println!("I/O Error on STDIN: {}", msg);

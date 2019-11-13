@@ -92,6 +92,7 @@ impl NCursesView {
 		(height_mod_game_size, width_mod_game_size)
 	}
 
+	#[allow(clippy::float_cmp)]
 	fn show_board_in_window(&self, board_window: nc::WINDOW, t: f32) {
 		let game = self.game.borrow();
 
@@ -99,6 +100,7 @@ impl NCursesView {
 			match r#move {
 				Move::Appear { at, value } =>
 					if t == 1.0 {
+						// last frame is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
 						let square_window = self.position_square_in(*at, *at, board_window, t);
 						self.show_square_in_window(*value, square_window);
 					},
@@ -108,6 +110,7 @@ impl NCursesView {
 				},
 				Move::Merge { from, to, start_value, end_value } =>
 					if t == 1.0 {
+						// last frame is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
 						let square_window = self.position_square_in(*from, *to, board_window, t);
 						self.show_square_in_window(*end_value, square_window);
 					} else {
