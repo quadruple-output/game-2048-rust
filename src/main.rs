@@ -3,6 +3,9 @@ use std::env;
 
 use game2048::{ViewType, ViewType::*};
 
+const AUTHOR: &'static str = "quadruple-output";
+const VERSION: &'static str = "0.1.0";
+
 enum Config {
 	Play { view_type: ViewType },
 	ShowVersion,
@@ -26,7 +29,7 @@ impl Config {
 fn main() {
 	match Config::from_args(env::args().collect()) {
 		Config::Play { view_type } => game2048::play(view_type, 3, 3),
-		Config::ShowVersion => println!("Game2048 by Ivo.  V 0.1.0"),
+		Config::ShowVersion => println!("Game2048 by {}.  V {}", AUTHOR, VERSION),
 		Config::ShowUsage { cmd_name } => {
 			println!("Usage: {} [-v|-c]", cmd_name);
 			println!("  -v : show version");
