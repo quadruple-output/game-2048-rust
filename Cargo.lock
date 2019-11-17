@@ -11,7 +11,7 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "game-2048-rust"
+name = "game2048"
 version = "0.1.1"
 dependencies = [
  "ncurses 5.99.0 (registry+https://github.com/rust-lang/crates.io-index)",
