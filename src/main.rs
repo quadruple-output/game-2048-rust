@@ -4,7 +4,7 @@ use std::env;
 use game2048::{ViewType, ViewType::*};
 
 const AUTHOR: &'static str = "quadruple-output";
-const VERSION: &'static str = "0.1.0";
+const VERSION: &'static str = "0.1.1";
 
 enum Config {
 	Play { view_type: ViewType },
