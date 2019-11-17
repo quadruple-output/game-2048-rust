@@ -16,6 +16,7 @@ impl Animator {
 	pub fn animate<V>(&self, visualizer: V)
 		where V: Fn(f32) {
 		visualizer(0.0); // guarantee exact zero as first frame
+		self.sleep();
 		for i in 1..self.steps {
 			visualizer(i as f32 / self.steps as f32);
 			self.sleep();
@@ -23,5 +24,8 @@ impl Animator {
 		visualizer(1.0); // guarantee exact one as last frame
 	}
 
-	fn sleep(&self) { thread::sleep(self.duration); }
+	fn sleep(&self) {
+		// TODO: reduce sleep duration by duration of last frame display
+		thread::sleep(self.duration);
+	}
 }

@@ -20,6 +20,10 @@ pub struct NCursesView {
 
 impl View for NCursesView {
 	fn update(&self) {
+		if self.game.borrow().latest_moves().len() == 0 {
+			return;
+			// TODO: refresh on resize event
+		};
 		nc::erase(); // like clear(), but without implicit refresh()
 		let board_box_window = self.position_board_box_in(nc::stdscr());
 		// 		if let GameState::Over = game.state() {
@@ -49,7 +53,7 @@ impl NCursesView {
 		nc::start_color();
 		nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
 		nc::refresh(); // required for first wrefresh to work
-		NCursesView { game, pallete: Pallete::new(), animator: Animator::new(0.5, 10) }
+		NCursesView { game, pallete: Pallete::new(), animator: Animator::new(0.35, 20) }
 	}
 
 	fn position_board_box_in(&self, window: nc::WINDOW) -> nc::WINDOW {
