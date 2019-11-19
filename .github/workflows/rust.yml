@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: update package list
+      run: sudo apt update
     - name: Install ncurses
       run: sudo apt install ncurses
     - uses: actions/checkout@v1
