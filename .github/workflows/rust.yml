@@ -11,7 +11,7 @@ jobs:
     - name: update package list
       run: sudo apt update
     - name: Install ncurses
-      run: sudo apt install ncurses
+      run: sudo apt install libncurses-dev
     - uses: actions/checkout@v1
     - name: Build
       run: cargo build --verbose
