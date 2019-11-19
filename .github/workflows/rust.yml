@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install ncurses
+      run: sudo apt install ncurses
     - uses: actions/checkout@v1
     - name: Build
       run: cargo build --verbose
