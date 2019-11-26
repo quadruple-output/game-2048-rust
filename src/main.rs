@@ -15,13 +15,13 @@ enum Config {
 impl Config {
 	pub fn from_args(args: Vec<String>) -> Self {
 		match args.len().cmp(&2) {
-			Less => Self::Play { view_type: NCurses },
+			Less => Config::Play { view_type: NCurses },
 			Equal => match args[1].as_str() {
-				"-v" => Self::ShowVersion,
-				"-c" => Self::Play { view_type: Console },
-				_ => Self::ShowUsage { cmd_name: args[0].clone() }
+				"-v" => Config::ShowVersion,
+				"-c" => Config::Play { view_type: Console },
+				_ => Config::ShowUsage { cmd_name: args[0].clone() }
 			},
-			Greater => Self::ShowUsage { cmd_name: args[0].clone() }
+			Greater => Config::ShowUsage { cmd_name: args[0].clone() }
 		}
 	}
 }
