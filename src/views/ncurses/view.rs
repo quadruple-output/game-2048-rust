@@ -1,5 +1,5 @@
 use ncurses as nc;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use super::animator::Animator;
@@ -13,22 +13,20 @@ use crate::views::View;
 //
 
 pub struct NCursesView {
-	game:     Rc<RefCell<Game>>,
-	pallete:  Pallete,
-	animator: Animator
+	game:            Rc<RefCell<Game>>,
+	pallete:         Pallete,
+	animator:        Animator,
+	last_shown_move: Cell<usize>
 }
 
 impl View for NCursesView {
 	fn update(&self) {
-		if self.game.borrow().latest_moves().len() == 0 {
-			return;
-			// TODO: refresh on resize event
-		};
 		nc::erase(); // like clear(), but without implicit refresh()
 		let board_box_window = self.position_board_box_in(nc::stdscr());
-		// 		if let GameState::Over = game.state() {
-		// 			nc::wattr_on(board_win, nc::A_BLINK());
-		// 		}
+		// TODO:
+		// if let GameState::Over = game.state() {
+		// 	nc::wattr_on(board_win, nc::A_BLINK());
+		// }
 		let board_window = self.boxed_subwindow(board_box_window);
 		// 		nc::wattr_off(board_win, nc::A_BLINK());
 		// 		if let GameState::Over = game.state() {
@@ -36,12 +34,25 @@ impl View for NCursesView {
 		// 		}
 		// 		nc::wattr_off(board_win, nc::A_STANDOUT());
 		nc::wnoutrefresh(nc::stdscr());
-		self.animator.animate(|t| {
-			             nc::werase(board_window);
-			             self.show_board_in_window(board_window, t);
-			             nc::wnoutrefresh(board_window);
-			             nc::doupdate();
-		             });
+		let draw_frame = |t| {
+			nc::werase(board_window);
+			self.show_board_in_window(board_window, t);
+			nc::wnoutrefresh(board_window);
+			nc::doupdate();
+		};
+		if self.last_shown_move.get() == self.game.borrow().move_count() {
+			// move has already been animated ⇒ only show last frame
+			draw_frame(1.0);
+		} else {
+			self.animator.animate(draw_frame);
+			self.last_shown_move.set(self.game.borrow().move_count());
+		}
+		// delwin is important to clear up ncurses. Otherwise, a screen redraw on window
+		// resize takes more and more time the longer you play.
+		// TODO: use drop to automatically clean-up windows by creating an own window
+		// struct.
+		nc::delwin(board_window);
+		nc::delwin(board_box_window);
 	}
 }
 
@@ -53,7 +64,11 @@ impl NCursesView {
 		nc::start_color();
 		nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
 		nc::refresh(); // required for first wrefresh to work
-		NCursesView { game, pallete: Pallete::new(), animator: Animator::new(0.35, 20) }
+		let last_shown_move = game.borrow().move_count();
+		NCursesView { game,
+		              pallete: Pallete::new(),
+		              animator: Animator::new(0.35, 20),
+		              last_shown_move: Cell::new(last_shown_move) }
 	}
 
 	fn position_board_box_in(&self, window: nc::WINDOW) -> nc::WINDOW {
@@ -107,25 +122,27 @@ impl NCursesView {
 						// last frame is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
 						let square_window = self.position_square_in(*at, *at, board_window, t);
 						self.show_square_in_window(*value, square_window);
+						nc::delwin(square_window);
 					},
 				Move::Shift { from, to, value } => {
 					let square_window = self.position_square_in(*from, *to, board_window, t);
 					self.show_square_in_window(*value, square_window);
+					nc::delwin(square_window);
 				},
-				Move::Merge { from, to, start_value, end_value } =>
+				Move::Merge { from, to, start_value, end_value } => {
+					let square_window = self.position_square_in(*from, *to, board_window, t);
 					if t == 1.0 {
 						// last frame is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
-						let square_window = self.position_square_in(*from, *to, board_window, t);
 						self.show_square_in_window(*end_value, square_window);
 					} else {
-						// let square_window_to = self.position_square_in(*from, *to, board_window,
-						// 1.0); self.show_square_in_window(*start_value, square_window_to);
-						let square_window_from = self.position_square_in(*from, *to, board_window, t);
-						self.show_square_in_window(*start_value, square_window_from);
-					},
+						self.show_square_in_window(*start_value, square_window);
+					}
+					nc::delwin(square_window);
+				},
 				Move::Stay { at, value } => {
 					let square_window = self.position_square_in(*at, *at, board_window, t);
 					self.show_square_in_window(*value, square_window);
+					nc::delwin(square_window);
 				}
 			}
 		}

@@ -21,14 +21,16 @@ pub enum GameState {
 pub struct Game {
 	pub board:    Board,
 	state:        GameState,
-	latest_moves: Vec<Move>
+	latest_moves: Vec<Move>,
+	move_count:   usize
 }
 
 impl Game {
 	pub fn new(size_x: usize, size_y: usize) -> Game {
 		let mut new_game = Game { state:        GameState::Running,
 		                          board:        Board::new(size_x, size_y),
-		                          latest_moves: Vec::new() };
+		                          latest_moves: Vec::new(),
+		                          move_count:   0 };
 		new_game.execute(Command::New);
 		new_game
 	}
@@ -47,14 +49,15 @@ impl Game {
 			}
 		} {
 			self.latest_moves = new_moves;
-		} else {
-			self.latest_moves = Vec::new();
+			self.move_count += 1;
 		}
 	}
 
 	pub fn state(&self) -> &GameState { &self.state }
 
 	pub fn latest_moves(&self) -> &Vec<Move> { &self.latest_moves }
+
+	pub fn move_count(&self) -> usize { self.move_count }
 
 	fn restart(&mut self) -> Move { self.board.initialize() }
 
