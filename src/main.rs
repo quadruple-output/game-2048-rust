@@ -1,5 +1,7 @@
+use clap; // todo: use better argument parser for tracing ⇒ https://docs.rs/clap/
 use std::cmp::Ordering::*;
 use std::env;
+use stderrlog;
 
 use game2048::{ViewType, ViewType::*};
 
@@ -27,6 +29,7 @@ impl Config {
 }
 
 fn main() {
+	// stderrlog::new().module(module_path!()).verbosity(5).init().unwrap();
 	match Config::from_args(env::args().collect()) {
 		Config::Play { view_type } => game2048::play(view_type, 3, 3),
 		Config::ShowVersion => println!("Game2048 by {}.  V {}", AUTHOR, VERSION),
