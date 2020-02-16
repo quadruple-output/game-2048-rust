@@ -5,8 +5,8 @@ use stderrlog;
 
 use game2048::{ViewType, ViewType::*};
 
-const AUTHOR: &'static str = "quadruple-output";
-const VERSION: &'static str = "0.1.1";
+const AUTHOR: &str = "quadruple-output";
+const VERSION: &str = "0.1.1";
 
 enum Config {
 	Play { view_type: ViewType },
