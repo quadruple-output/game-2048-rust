@@ -1,23 +1,22 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::io;
-use std::rc::Rc;
 
 use super::Controller;
 use crate::game::{Command, Game};
 use crate::views::{ConsoleView, View};
 
-pub struct ConsoleController {
-	game: Rc<RefCell<Game>>,
-	view: ConsoleView
+pub struct ConsoleController<'a> {
+	game: &'a RefCell<Game>,
+	view: ConsoleView<'a>
 }
 
-impl ConsoleController {
-	pub fn create(game: Rc<RefCell<Game>>, view: ConsoleView) -> impl Controller {
+impl<'a> ConsoleController<'a> {
+	pub fn create(game: &'a RefCell<Game>, view: ConsoleView<'a>) -> ConsoleController<'a> {
 		ConsoleController { game, view }
 	}
 }
 
-impl Controller for ConsoleController {
+impl<'a> Controller for ConsoleController<'a> {
 	fn view(&self) -> &dyn View { &self.view }
 
 	fn game(&self) -> Ref<Game> { self.game.borrow() }

@@ -1,19 +1,18 @@
 use ::std::cell::RefCell;
-use ::std::rc::Rc;
 
 use super::View;
 use crate::game::{Board, Game, Square};
 
-pub struct ConsoleView {
-	game: Rc<RefCell<Game>>
+pub struct ConsoleView<'a> {
+	game: &'a RefCell<Game>
 }
 
-impl View for ConsoleView {
+impl<'a> View for ConsoleView<'a> {
 	fn update(&self) { self.show_board(&self.game.borrow().board); }
 }
 
-impl ConsoleView {
-	pub fn new(game: Rc<RefCell<Game>>) -> ConsoleView { ConsoleView { game } }
+impl<'a> ConsoleView<'a> {
+	pub fn new(game: &RefCell<Game>) -> ConsoleView { ConsoleView { game } }
 
 	fn show_board(&self, board: &Board) {
 		for y in 0..board.size_y() {

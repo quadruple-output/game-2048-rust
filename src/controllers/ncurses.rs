@@ -1,18 +1,17 @@
 use ncurses as nc;
 use std::cell::{Ref, RefCell, RefMut};
-use std::rc::Rc;
 
 use super::Controller;
 use crate::game::{Command, Game};
 use crate::views::{NCursesView, View};
 
-pub struct NCursesController {
-	game: Rc<RefCell<Game>>,
-	view: NCursesView
+pub struct NCursesController<'a> {
+	game: &'a RefCell<Game>,
+	view: NCursesView<'a>
 }
 
-impl NCursesController {
-	pub fn create(game: Rc<RefCell<Game>>, view: NCursesView) -> impl Controller {
+impl<'a> NCursesController<'a> {
+	pub fn create(game: &'a RefCell<Game>, view: NCursesView<'a>) -> NCursesController<'a> {
 		nc::cbreak();
 		nc::keypad(nc::stdscr(), true);
 		nc::noecho();
@@ -20,7 +19,7 @@ impl NCursesController {
 	}
 }
 
-impl Controller for NCursesController {
+impl<'a> Controller for NCursesController<'a> {
 	fn view(&self) -> &dyn View { &self.view }
 
 	fn game(&self) -> Ref<Game> { self.game.borrow() }

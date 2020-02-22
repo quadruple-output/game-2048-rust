@@ -1,7 +1,6 @@
 use log::{debug, trace};
 use ncurses as nc;
 use std::cell::{Cell, RefCell};
-use std::rc::Rc;
 
 use super::animator::Animator;
 use super::pallete::Pallete;
@@ -13,8 +12,8 @@ use crate::views::View;
 // man pages: man 3x <function>
 //
 
-pub struct NCursesView {
-	game:            Rc<RefCell<Game>>,
+pub struct NCursesView<'a> {
+	game:            &'a RefCell<Game>,
 	pallete:         Pallete,
 	animator:        Animator,
 	last_shown_move: Cell<usize>,
@@ -23,7 +22,7 @@ pub struct NCursesView {
 
 struct NCWindow(nc::WINDOW); // "Newtype" wrapper pattern for implementing Drop for nc::WINDOW
 
-impl View for NCursesView {
+impl<'a> View for NCursesView<'a> {
 	fn update(&self) {
 		nc::erase(); // like clear(), but without implicit refresh()
 		trace!("> pos.board box");
@@ -56,10 +55,10 @@ impl View for NCursesView {
 	}
 }
 
-impl NCursesView {
+impl<'a> NCursesView<'a> {
 	const BORDER_WIDTH: i32 = 1;
 
-	pub fn new(game: Rc<RefCell<Game>>) -> Self {
+	pub fn new(game: &'a RefCell<Game>) -> Self {
 		nc::initscr();
 		nc::start_color();
 		nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
@@ -211,7 +210,7 @@ impl Drop for NCWindow {
 	}
 }
 
-impl Drop for NCursesView {
+impl<'a> Drop for NCursesView<'a> {
 	fn drop(&mut self) {
 		// reset terminal properties (e.g. make cursor visible again)
 		nc::endwin(); // this also clears the screen and destroys any error output

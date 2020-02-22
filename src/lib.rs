@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 
 use controllers::{ConsoleController, Controller, NCursesController};
 use game::Game;
@@ -15,17 +14,17 @@ pub enum ViewType {
 }
 
 pub fn play(view_type: ViewType, size_x: usize, size_y: usize) {
-	let game = Rc::new(RefCell::new(Game::new(size_x, size_y)));
+	let game = RefCell::new(Game::new(size_x, size_y));
 	let controller: Box<dyn Controller>;
 
 	match view_type {
 		ViewType::Console => {
-			let view = ConsoleView::new(Rc::clone(&game));
-			controller = Box::new(ConsoleController::create(Rc::clone(&game), view));
+			let view = ConsoleView::new(&game);
+			controller = Box::new(ConsoleController::create(&game, view));
 		},
 		ViewType::NCurses => {
-			let view = NCursesView::new(Rc::clone(&game));
-			controller = Box::new(NCursesController::create(Rc::clone(&game), view));
+			let view = NCursesView::new(&game);
+			controller = Box::new(NCursesController::create(&game, view));
 		}
 	}
 
