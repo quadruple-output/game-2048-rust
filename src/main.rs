@@ -24,6 +24,16 @@ fn main() {
 		                                                                  .multiple(true)
 		                                                                  .help("Sets level of verbosity on \
 		                                                                         stderr"))
+		                                  .arg(Arg::with_name("x").short("w")
+		                                                          .alias("x")
+		                                                          .value_name("WIDTH")
+		                                                          .default_value("3")
+		                                                          .help("Set the width of the Board"))
+		                                  .arg(Arg::with_name("y").short("h")
+		                                                          .alias("y")
+		                                                          .value_name("HEIGHT")
+		                                                          .default_value("3")
+		                                                          .help("Set the height of the Board"))
 		                                  .get_matches();
 
 	if args.is_present("list_views") {
@@ -39,7 +49,15 @@ fn main() {
 				None
 			}
 		} {
-			game2048::play(view_type, 3, 3);
+			let x = match args.value_of("x").unwrap().parse() {
+				Ok(n) => n,
+				Err(_) => 3
+			};
+			let y = match args.value_of("y").unwrap().parse() {
+				Ok(n) => n,
+				Err(_) => 3
+			};
+			game2048::play(view_type, x, y);
 		}
 	}
 }
