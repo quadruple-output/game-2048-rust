@@ -1,6 +1,7 @@
 use log::{debug, trace};
 use ncurses as nc;
 use std::cell::{Cell, RefCell};
+use std::fmt;
 
 use super::animator::Animator;
 use super::pallete::Pallete;
@@ -20,14 +21,13 @@ pub struct NCursesView<'a> {
 	stdscr:          NCWindow
 }
 
-struct NCWindow(nc::WINDOW); // "Newtype" wrapper pattern for implementing Drop for nc::WINDOW
+struct NCWindow(nc::WINDOW, String); // "Newtype" wrapper pattern for implementing Drop for nc::WINDOW
 
 impl<'a> View for NCursesView<'a> {
 	fn update(&self) {
+		debug!("Start update view");
 		nc::erase(); // like clear(), but without implicit refresh()
-		trace!("> pos.board box");
-		let board_box_window = self.position_board_box_in(&self.stdscr);
-		trace!("< pos.board box");
+		let board_box_window = self.position_board_in(&self.stdscr);
 		// TODO:
 		// if let GameState::Over = game.state() {
 		// 	nc::wattr_on(board_win, nc::A_BLINK());
@@ -40,6 +40,7 @@ impl<'a> View for NCursesView<'a> {
 		// 		nc::wattr_off(board_win, nc::A_STANDOUT());
 		nc::wnoutrefresh(nc::stdscr());
 		let draw_frame = |t| {
+			debug!("Draw frame, t={:?}", t);
 			nc::werase(board_window.0);
 			self.show_board_in_window(&board_window, t);
 			nc::wnoutrefresh(board_window.0);
@@ -49,9 +50,12 @@ impl<'a> View for NCursesView<'a> {
 			// move has already been animated ⇒ only show last frame
 			draw_frame(1.0);
 		} else {
+			debug!("Start animation");
 			self.animator.animate(draw_frame);
+			debug!("End animation");
 			self.last_shown_move.set(self.game.borrow().move_count());
 		}
+		debug!("End update view");
 	}
 }
 
@@ -64,15 +68,14 @@ impl<'a> NCursesView<'a> {
 		nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
 		nc::refresh(); // required for first wrefresh to work
 		let last_shown_move = game.borrow().move_count();
-		trace!("get stdscr...");
 		NCursesView { game,
 		              pallete: Pallete::new(),
 		              animator: Animator::new(0.2, 50),
 		              last_shown_move: Cell::new(last_shown_move),
-		              stdscr: NCWindow::new(nc::stdscr()) }
+		              stdscr: NCWindow::new(None, nc::stdscr(), "stdscr") }
 	}
 
-	fn position_board_box_in(&self, window: &NCWindow) -> NCWindow {
+	fn position_board_in(&self, window: &NCWindow) -> NCWindow {
 		let (mut screen_height, mut screen_width) = window.size();
 		// leave room for outer box:
 		screen_height -= 2 * Self::BORDER_WIDTH;
@@ -80,25 +83,33 @@ impl<'a> NCursesView<'a> {
 		// calc optimal coords for board:
 		let (squares_height, squares_width) = self.calc_optimal_board_win(screen_height, screen_width);
 		// re-apply room for outer box:
-		NCWindow::new(nc::derwin(
+		NCWindow::new(
+		              Some(window),
+		              nc::derwin(
 			window.0,
 			squares_height + 2 * Self::BORDER_WIDTH,
 			squares_width + 2 * Self::BORDER_WIDTH,
 			0,
 			0
-		))
+		),
+		              "board"
+		)
 	}
 
 	fn boxed_subwindow(&self, window: &NCWindow) -> NCWindow {
 		nc::box_(window.0, 0, 0);
 		let (win_height, win_width) = window.size();
-		NCWindow::new(nc::derwin(
+		NCWindow::new(
+		              Some(window),
+		              nc::derwin(
 			window.0,
 			win_height - 2 * Self::BORDER_WIDTH,
 			win_width - 2 * Self::BORDER_WIDTH,
 			Self::BORDER_WIDTH,
 			Self::BORDER_WIDTH
-		))
+		),
+		              "boxed"
+		)
 	}
 
 	fn calc_optimal_board_win(&self, max_height: i32, max_width: i32) -> (i32, i32) {
@@ -167,7 +178,11 @@ impl<'a> NCursesView<'a> {
 		let left = self.interpolate(start_left, end_left, t);
 		let bottom = self.interpolate(start_bottom, end_bottom, t);
 		let right = self.interpolate(start_right, end_right, t);
-		NCWindow::new(nc::derwin(board_window.0, bottom - top, right - left, top, left))
+		NCWindow::new(
+		              Some(board_window),
+		              nc::derwin(board_window.0, bottom - top, right - left, top, left),
+		              "tile"
+		)
 	}
 
 	pub fn interpolate(&self, a: i32, b: i32, t: f32) -> i32 { a + (t * (b as f32 - a as f32)) as i32 }
@@ -189,15 +204,33 @@ impl<'a> NCursesView<'a> {
 }
 
 impl NCWindow {
-	fn new(wrappee: nc::WINDOW) -> Self {
-		trace!("new Window: {:?}", wrappee);
-		NCWindow(wrappee)
+	fn new(parent: Option<&NCWindow>, wrappee: nc::WINDOW, label: &str) -> Self {
+		let mut new_label = String::new();
+		if let Some(parent) = parent {
+			new_label.push_str(&parent.1);
+			new_label.push_str("::");
+		};
+		new_label.push_str(label);
+		let new_win = NCWindow(wrappee, new_label);
+		trace!("new Window {:?}", new_win);
+		new_win
 	}
 
 	fn size(&self) -> (i32, i32) {
 		let (mut win_height, mut win_width) = (0, 0);
 		nc::getmaxyx(self.0, &mut win_height, &mut win_width);
 		(win_height, win_width)
+	}
+}
+
+impl fmt::Debug for NCWindow {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let (height, width) = self.size();
+		let (mut x, mut y) = (0, 0);
+		nc::getparyx(self.0, &mut y, &mut x);
+		write!(f, "{:?}: '{}' {}x{}@{},{}", self.0, self.1, width, height, x, y)
+		// f.debug_struct("NCWindow").field("x", &self.x).field("y",
+		// &self.y).finish()
 	}
 }
 
