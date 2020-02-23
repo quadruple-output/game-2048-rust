@@ -1,7 +1,9 @@
 mod board;
 
 pub use board::{Board, Coord, Move, Square};
+use log::info;
 
+#[derive(Debug)]
 pub enum Command {
 	Nop, // no operation. Used for repainting
 	New,
@@ -36,20 +38,25 @@ impl Game {
 	}
 
 	pub fn execute(&mut self, command: Command) {
-		if let Some(new_moves) = match command {
-			Command::Nop => None, // screen refresh only
-			Command::Left => self.shift_left(),
-			Command::Right => self.shift_right(),
-			Command::Up => self.shift_up(),
-			Command::Down => self.shift_down(),
-			Command::New => Some(vec![self.restart()]),
-			Command::Quit => {
-				self.state = GameState::Quit;
-				None
-			}
-		} {
-			self.latest_moves = new_moves;
-			self.move_count += 1;
+		match match command {
+			      Command::Nop => None, // screen refresh only
+		        Command::Left => self.shift_left(),
+		        Command::Right => self.shift_right(),
+		        Command::Up => self.shift_up(),
+		        Command::Down => self.shift_down(),
+		        Command::New => Some(vec![self.restart()]),
+		        Command::Quit => {
+			        self.state = GameState::Quit;
+			        info!("Game command: {:?}", command);
+			        return;
+		        }
+		      } {
+			Some(new_moves) => {
+				info!("Game command: {:?}", command);
+				self.latest_moves = new_moves;
+				self.move_count += 1;
+			},
+			None => info!("Game command: {:?} (no move)", command)
 		}
 	}
 
