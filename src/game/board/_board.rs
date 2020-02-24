@@ -13,23 +13,6 @@ pub struct Board {
 	rng:           rand::ThreadRng
 }
 
-impl PartialEq for Board {
-	fn eq(&self, other: &Board) -> bool {
-		if self.max_x != other.max_x || self.max_y != other.max_y {
-			false
-		} else {
-			for x in 0..self.size_x() {
-				for y in 0..self.size_y() {
-					if self.grid[x][y] != other.grid[x][y] {
-						return false;
-					}
-				}
-			}
-			true
-		}
-	}
-}
-
 impl Board {
 	pub fn new(size_x: usize, size_y: usize) -> Self {
 		Board { max_x:         size_x - 1,
@@ -46,10 +29,6 @@ impl Board {
 		self.new_tile()
 	}
 
-	fn empty_grid(size_x: usize, size_y: usize) -> Vec<Vec<Square>> {
-		vec![vec![Square::Empty; size_y]; size_x]
-	}
-
 	pub fn new_tile(&mut self) -> Move {
 		let num_free_tiles = self.num_free_tiles();
 		if num_free_tiles == 0 {
@@ -60,33 +39,6 @@ impl Board {
 		let new_value = if self.ten_percent_chance() { 4 } else { 2 };
 		self.put(rnd_free_coord, Value(new_value));
 		Move::Appear { at: rnd_free_coord, value: new_value }
-	}
-
-	fn num_free_tiles(&self) -> usize {
-		let mut n = 0;
-		for column in &self.grid {
-			for square in column {
-				if let Empty = square {
-					n += 1;
-				}
-			}
-		}
-		n
-	}
-
-	fn find_free_tile(&self, n: usize) -> Coord {
-		let mut count = 0;
-		for x in 0..self.size_x() {
-			for y in 0..self.size_y() {
-				if let Empty = self.grid[x][y] {
-					if count == n {
-						return self.coord(x, y);
-					}
-					count += 1;
-				}
-			}
-		}
-		panic!();
 	}
 
 	pub fn size_x(&self) -> usize { self.max_x + 1 }
@@ -115,6 +67,37 @@ impl Board {
 
 	pub fn shift_up(&mut self) -> Option<Vec<Move>> {
 		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, 0)).collect(), Vector::new(0, 1))
+	}
+
+	fn empty_grid(size_x: usize, size_y: usize) -> Vec<Vec<Square>> {
+		vec![vec![Square::Empty; size_y]; size_x]
+	}
+
+	fn num_free_tiles(&self) -> usize {
+		let mut n = 0;
+		for column in &self.grid {
+			for square in column {
+				if let Empty = square {
+					n += 1;
+				}
+			}
+		}
+		n
+	}
+
+	fn find_free_tile(&self, n: usize) -> Coord {
+		let mut count = 0;
+		for x in 0..self.size_x() {
+			for y in 0..self.size_y() {
+				if let Empty = self.grid[x][y] {
+					if count == n {
+						return self.coord(x, y);
+					}
+					count += 1;
+				}
+			}
+		}
+		panic!(); // n > self.num_free_tiles()
 	}
 
 	fn contract_multi(&mut self, starts: Vec<Coord>, direction: Vector) -> Option<Vec<Move>> {
@@ -163,11 +146,12 @@ impl Board {
 							if !target_changed {
 								moves.push(Move::Stay { at: cursor.target, value: target_value });
 							}
+							let merged_value = source_value + target_value;
 							moves.push(Move::Merge { from:        cursor.source,
 							                         to:          cursor.target,
 							                         start_value: source_value,
-							                         end_value:   source_value + target_value });
-							self.put(cursor.target, Value(source_value + target_value));
+							                         end_value:   merged_value });
+							self.put(cursor.target, Value(merged_value));
 							self.put(cursor.source, Empty);
 							if cursor.advance_both().is_err() {
 								break;

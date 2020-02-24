@@ -1,5 +1,5 @@
 use clap::{App, Arg}; // argument parser ⇒ https://docs.rs/clap/
-use stderrlog; // tracing ⇒ https://docs.rs/log + https://docs.rs/stderrlog
+// use stderrlog; // tracing ⇒ https://docs.rs/log + https://docs.rs/stderrlog
 
 use game2048::ViewType;
 
