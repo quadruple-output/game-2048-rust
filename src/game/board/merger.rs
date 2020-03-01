@@ -15,9 +15,9 @@ impl<'a> Merger<'a> {
 			match self.cursor.source_tile() {
 				Empty => {
 					if self.cursor.advance_source().is_err() {
-						if !self.cursor.target_changed {
+						if !self.cursor.target_changed() {
 							if let Value(target_value) = self.cursor.target_tile() {
-								moves.push(Move::Stay { at: self.cursor.target, value: target_value });
+								moves.push(Move::Stay { at: self.cursor.target_coord(), value: target_value });
 							}
 						}
 						break;
@@ -25,9 +25,9 @@ impl<'a> Merger<'a> {
 				},
 				Value(source_value) => match self.cursor.target_tile() {
 					Empty => {
-						self.cursor.move_to_target(source_value);
-						moves.push(Move::Shift { from:  self.cursor.source,
-						                         to:    self.cursor.target,
+						self.cursor.move_tile_to_target(source_value);
+						moves.push(Move::Shift { from:  self.cursor.source_coord(),
+						                         to:    self.cursor.target_coord(),
 						                         value: source_value });
 						if self.cursor.advance_source().is_err() {
 							break;
@@ -35,25 +35,25 @@ impl<'a> Merger<'a> {
 					},
 					Value(target_value) =>
 						if target_value == source_value {
-							if !self.cursor.target_changed {
-								moves.push(Move::Stay { at: self.cursor.target, value: target_value });
+							if !self.cursor.target_changed() {
+								moves.push(Move::Stay { at: self.cursor.target_coord(), value: target_value });
 							}
 							let merged_value = source_value + target_value;
-							moves.push(Move::Merge { from:        self.cursor.source,
-							                         to:          self.cursor.target,
+							moves.push(Move::Merge { from:        self.cursor.source_coord(),
+							                         to:          self.cursor.target_coord(),
 							                         start_value: source_value,
 							                         end_value:   merged_value });
-							self.cursor.move_to_target(merged_value);
+							self.cursor.move_tile_to_target(merged_value);
 							if self.cursor.advance_both().is_err() {
 								break;
 							};
 						} else {
-							if !self.cursor.target_changed {
-								moves.push(Move::Stay { at: self.cursor.target, value: target_value });
+							if !self.cursor.target_changed() {
+								moves.push(Move::Stay { at: self.cursor.target_coord(), value: target_value });
 							}
 							if self.cursor.advance_target().is_err() {
 								// reached end of board while target has a value
-								moves.push(Move::Stay { at: self.cursor.source, value: source_value });
+								moves.push(Move::Stay { at: self.cursor.source_coord(), value: source_value });
 								break;
 							};
 						},
