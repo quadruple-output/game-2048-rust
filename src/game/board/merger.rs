@@ -35,9 +35,6 @@ impl<'a> Merger<'a> {
 					},
 					Value(target_value) =>
 						if target_value == source_value {
-							if !self.cursor.target_changed() {
-								moves.push(Move::Stay { at: self.cursor.target_coord(), value: target_value });
-							}
 							let merged_value = source_value + target_value;
 							moves.push(Move::Merge { from:        self.cursor.source_coord(),
 							                         to:          self.cursor.target_coord(),

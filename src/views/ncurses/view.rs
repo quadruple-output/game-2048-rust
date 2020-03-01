@@ -146,12 +146,14 @@ impl<'a> NCursesView<'a> {
 					self.show_square_in_window(*value, &square_window);
 				},
 				Move::Merge { from, to, start_value, end_value } => {
-					let square_window = self.position_square_in(*from, *to, board_window, t);
+					let source_window = self.position_square_in(*from, *to, board_window, t);
 					if t == 1.0 {
 						// last frame is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
-						self.show_square_in_window(*end_value, &square_window);
+						self.show_square_in_window(*end_value, &source_window);
 					} else {
-						self.show_square_in_window(*start_value, &square_window);
+						let target_window = self.position_square_in(*to, *to, board_window, t);
+						self.show_square_in_window(*start_value, &target_window); // target first
+						self.show_square_in_window(*start_value, &source_window); // drav source over target
 					}
 				},
 				Move::Stay { at, value } => {
