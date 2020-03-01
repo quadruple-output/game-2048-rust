@@ -5,6 +5,7 @@ pub struct Pallete {}
 impl Pallete {
 	pub fn new() -> Self {
 		// backgrounds:
+		nc::init_color(100, 1000, 1000, 1000); // white
 		nc::init_color(101, 500, 1000, 500); // light green
 		nc::init_color(102, 900, 900, 333); // light yellow
 		nc::init_color(103, 1000, 500, 500); // light red
@@ -19,6 +20,7 @@ impl Pallete {
 		nc::init_color(112, 0, 900, 900); // cyan
 
 		// foregrounds:
+		nc::init_color(200, 1000, 0, 0); // red
 		nc::init_color(201, 0, 0, 0); // black
 		nc::init_color(202, 0, 0, 0); // black
 		nc::init_color(203, 0, 0, 0); // black
@@ -45,11 +47,13 @@ impl Pallete {
 		nc::init_pair(10, 210, 110);
 		nc::init_pair(11, 211, 111);
 		nc::init_pair(12, 212, 112);
+		nc::init_pair(13, 200, 100);
 		Self {}
 	}
 
 	pub fn get_pair_for_square_value(&self, value: u16) -> nc::attr_t {
 		match value {
+			0 => nc::COLOR_PAIR(13), // special flash-color for newly appearing tile
 			2 => nc::COLOR_PAIR(1),
 			4 => nc::COLOR_PAIR(2),
 			8 => nc::COLOR_PAIR(3),

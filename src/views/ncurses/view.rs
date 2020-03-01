@@ -21,7 +21,8 @@ pub struct NCursesView<'a> {
 	stdscr:          NCWindow
 }
 
-struct NCWindow(nc::WINDOW, String); // "Newtype" wrapper pattern for implementing Drop for nc::WINDOW
+struct NCWindow(nc::WINDOW, // "Newtype" wrapper pattern for implementing Drop for nc::WINDOW
+                String      /* just a label for debugging – no functionality */);
 
 impl<'a> View for NCursesView<'a> {
 	fn update(&self) {
@@ -42,7 +43,7 @@ impl<'a> View for NCursesView<'a> {
 		let draw_frame = |t| {
 			debug!("Draw frame, t={:?}", t);
 			nc::werase(board_window.0);
-			self.show_board_in_window(&board_window, t);
+			self.display_animation_frame(&board_window, t);
 			nc::wnoutrefresh(board_window.0);
 			nc::doupdate();
 		};
@@ -70,7 +71,7 @@ impl<'a> NCursesView<'a> {
 		let last_shown_move = game.borrow().move_count();
 		NCursesView { game,
 		              pallete: Pallete::new(),
-		              animator: Animator::new(0.2, 50),
+		              animator: Animator::new(0.3, 50),
 		              last_shown_move: Cell::new(last_shown_move),
 		              stdscr: NCWindow::new(None, nc::stdscr(), "stdscr") }
 	}
@@ -130,34 +131,38 @@ impl<'a> NCursesView<'a> {
 	}
 
 	#[allow(clippy::float_cmp)]
-	fn show_board_in_window(&self, board_window: &NCWindow, t: f32) {
+	fn display_animation_frame(&self, board_window: &NCWindow, t_global: f32) {
 		let game = self.game.borrow();
-
+		let t_appear = 0.6; // new tiles appear at this fraction of t_global
+		let t_move = (t_global / t_appear).min(1.0); // first animation part: move tiles
 		for r#move in game.latest_moves().iter() {
 			match r#move {
-				Move::Appear { at, value } =>
-					if t == 1.0 {
+				Move::Appear { at, value } => {
+					let square_window = self.position_square_in(*at, *at, board_window, t_global);
+					if t_global == 1.0 {
 						// last frame is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
-						let square_window = self.position_square_in(*at, *at, board_window, t);
 						self.show_square_in_window(*value, &square_window);
-					},
+					} else if t_global >= t_appear {
+						self.show_square_in_window(0, &square_window); // 0: special value for short flash
+					}
+				},
 				Move::Shift { from, to, value } => {
-					let square_window = self.position_square_in(*from, *to, board_window, t);
+					let square_window = self.position_square_in(*from, *to, board_window, t_move);
 					self.show_square_in_window(*value, &square_window);
 				},
 				Move::Merge { from, to, start_value, end_value } => {
-					let source_window = self.position_square_in(*from, *to, board_window, t);
-					if t == 1.0 {
-						// last frame is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
+					let source_window = self.position_square_in(*from, *to, board_window, t_move);
+					if t_move == 1.0 {
+						// max t_move is guaranteed to be exactly 1.0 (=> clippy::float_cmp)
 						self.show_square_in_window(*end_value, &source_window);
 					} else {
-						let target_window = self.position_square_in(*to, *to, board_window, t);
+						let target_window = self.position_square_in(*to, *to, board_window, t_move);
 						self.show_square_in_window(*start_value, &target_window); // target first
 						self.show_square_in_window(*start_value, &source_window); // drav source over target
 					}
 				},
 				Move::Stay { at, value } => {
-					let square_window = self.position_square_in(*at, *at, board_window, t);
+					let square_window = self.position_square_in(*at, *at, board_window, t_move);
 					self.show_square_in_window(*value, &square_window);
 				}
 			}
@@ -190,7 +195,8 @@ impl<'a> NCursesView<'a> {
 	pub fn interpolate(&self, a: i32, b: i32, t: f32) -> i32 { a + (t * (b as f32 - a as f32)) as i32 }
 
 	fn show_square_in_window(&self, value: u16, window: &NCWindow) {
-		let label = value.to_string();
+		let label;
+		label = if value > 0 { value.to_string() } else { String::from("?") };
 		nc::wattr_set(window.0, 0, 2);
 		nc::wbkgdset(window.0, self.pallete.get_pair_for_square_value(value));
 		nc::touchwin(window.0); // attempt to fix broken rendering. suggested in 'man 3x wrefresh' for window overlaps
