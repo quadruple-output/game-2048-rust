@@ -9,54 +9,32 @@ pub struct Merger<'a> {
 impl<'a> Merger<'a> {
 	pub fn new(cursor: DualCursor<'a>) -> Self { Merger { cursor } }
 
-	pub fn merge(mut self) -> Vec<Move> {
+	pub fn merge(self) -> Vec<Move> {
 		let mut moves = Vec::new();
+		self.merge_until_err(&mut moves).err(); // just ignore the result
+		moves
+	}
+
+	fn merge_until_err(mut self, moves: &mut Vec<Move>) -> Result<(), ()> {
 		loop {
 			match self.cursor.source_tile() {
 				Empty => {
-					if self.cursor.advance_source().is_err() {
-						if !self.cursor.target_changed() {
-							if let Value(target_value) = self.cursor.target_tile() {
-								moves.push(Move::Stay { at: self.cursor.target_coord(), value: target_value });
-							}
-						}
-						break;
-					};
+					self.cursor.advance_source(moves)?;
 				},
 				Value(source_value) => match self.cursor.target_tile() {
 					Empty => {
-						self.cursor.move_tile_to_target(source_value);
-						moves.push(Move::Shift { from:  self.cursor.source_coord(),
-						                         to:    self.cursor.target_coord(),
-						                         value: source_value });
-						if self.cursor.advance_source().is_err() {
-							break;
-						}
+						self.cursor.move_tile(source_value, moves);
+						self.cursor.advance_source(moves)?;
 					},
 					Value(target_value) =>
 						if target_value == source_value {
-							let merged_value = source_value + target_value;
-							moves.push(Move::Merge { from:        self.cursor.source_coord(),
-							                         to:          self.cursor.target_coord(),
-							                         start_value: source_value,
-							                         end_value:   merged_value });
-							self.cursor.move_tile_to_target(merged_value);
-							if self.cursor.advance_both().is_err() {
-								break;
-							};
+							self.cursor.merge_tiles(source_value, source_value + target_value, moves);
+							self.cursor.advance_both(moves)?;
 						} else {
-							if !self.cursor.target_changed() {
-								moves.push(Move::Stay { at: self.cursor.target_coord(), value: target_value });
-							}
-							if self.cursor.advance_target().is_err() {
-								// reached end of board while target has a value
-								moves.push(Move::Stay { at: self.cursor.source_coord(), value: source_value });
-								break;
-							};
+							self.cursor.advance_target(moves)?;
 						},
 				}
 			}
 		}
-		moves
 	}
 }
