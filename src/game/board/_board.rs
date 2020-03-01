@@ -1,14 +1,17 @@
 use super::coord::{Coord, Vector};
 use super::cursor::DualCursor;
+use super::merger::Merger;
 use super::r#move::Move;
 use super::{Square, Square::*};
 use rand::{distributions::IndependentSample, Rng};
+
+type XYGrid = Vec<Vec<Square>>;
 
 #[derive(Clone, Debug)]
 pub struct Board {
 	max_x:         usize, // used as array index -> must be typed 'usize'
 	max_y:         usize, // used as array index -> must be typed 'usize'
-	grid:          Vec<Vec<Square>>,
+	grid:          XYGrid,
 	rand_range_10: rand::distributions::Range<u8>,
 	rng:           rand::ThreadRng
 }
@@ -69,9 +72,7 @@ impl Board {
 		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, 0)).collect(), Vector::new(0, 1))
 	}
 
-	fn empty_grid(size_x: usize, size_y: usize) -> Vec<Vec<Square>> {
-		vec![vec![Square::Empty; size_y]; size_x]
-	}
+	fn empty_grid(size_x: usize, size_y: usize) -> XYGrid { vec![vec![Square::Empty; size_y]; size_x] }
 
 	fn num_free_tiles(&self) -> usize {
 		let mut n = 0;
@@ -103,7 +104,10 @@ impl Board {
 	fn contract_multi(&mut self, starts: Vec<Coord>, direction: Vector) -> Option<Vec<Move>> {
 		let mut moves = Vec::with_capacity(self.size_x() * self.size_y());
 		for start_coord in starts {
-			moves.append(&mut self.contract(DualCursor::new(start_coord, direction)));
+			let cursor = DualCursor::new(self, start_coord, direction);
+			let merger = Merger::new(cursor);
+			let mut cursor_moves = merger.merge();
+			moves.append(&mut cursor_moves);
 		}
 		// Return moves only if there are any _real_ moves:
 		// TODO: reduce to single statement (filter_map?)
@@ -114,63 +118,5 @@ impl Board {
 			}
 		}
 		None
-	}
-
-	fn contract(&mut self, mut cursor: DualCursor) -> Vec<Move> {
-		let mut moves = Vec::new();
-		let mut target_changed = false;
-		loop {
-			match self.at(cursor.source) {
-				Empty => {
-					if cursor.advance_source().is_err() {
-						if !target_changed {
-							if let Value(target_value) = self.at(cursor.target) {
-								moves.push(Move::Stay { at: cursor.target, value: target_value });
-							}
-						}
-						break;
-					};
-				},
-				Value(source_value) => match self.at(cursor.target) {
-					Empty => {
-						moves.push(Move::Shift { from: cursor.source, to: cursor.target, value: source_value });
-						self.put(cursor.target, Value(source_value));
-						self.put(cursor.source, Empty);
-						target_changed = true;
-						if cursor.advance_source().is_err() {
-							break;
-						}
-					},
-					Value(target_value) =>
-						if target_value == source_value {
-							if !target_changed {
-								moves.push(Move::Stay { at: cursor.target, value: target_value });
-							}
-							let merged_value = source_value + target_value;
-							moves.push(Move::Merge { from:        cursor.source,
-							                         to:          cursor.target,
-							                         start_value: source_value,
-							                         end_value:   merged_value });
-							self.put(cursor.target, Value(merged_value));
-							self.put(cursor.source, Empty);
-							if cursor.advance_both().is_err() {
-								break;
-							};
-							target_changed = false;
-						} else {
-							if !target_changed {
-								moves.push(Move::Stay { at: cursor.target, value: target_value });
-							}
-							if cursor.advance_target().is_err() {
-								// reached end of board while target has a value
-								moves.push(Move::Stay { at: cursor.source, value: source_value });
-								break;
-							};
-							target_changed = false;
-						},
-				}
-			}
-		}
-		moves
 	}
 }
