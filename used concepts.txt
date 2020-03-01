@@ -1,3 +1,6 @@
 List of concepts used in this example program:
 
+– library (lib.rs) with main.rs
 – ?-Operator: merger.rs
+– closures: animator.rs
+– non-ascii identifier: animator.rs

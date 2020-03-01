@@ -1,3 +1,5 @@
+#![feature(non_ascii_idents)] // used in animator.rs
+
 use std::cell::RefCell;
 
 use controllers::{ConsoleController, Controller, NCursesController};
