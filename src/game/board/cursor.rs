@@ -60,20 +60,22 @@ impl<'a> DualCursor<'a> {
 	}
 
 	pub fn move_tile(&mut self, tile_value: TileValue) {
-		self.board.put(self.target, Value(tile_value));
-		self.board.put(self.source, Empty);
-		self.target_changed = true;
+		self.clear_source_and_set_target(tile_value);
 		self.moves.push(Move::Shift { from: self.source, to: self.target, value: tile_value });
 	}
 
 	pub fn merge_tiles(&mut self, old_tile_value: TileValue, new_tile_value: TileValue) {
-		self.board.put(self.target, Value(new_tile_value));
-		self.board.put(self.source, Empty);
-		self.target_changed = true;
+		self.clear_source_and_set_target(new_tile_value);
 		self.moves.push(Move::Merge { from:        self.source,
 		                              to:          self.target,
 		                              start_value: old_tile_value,
 		                              end_value:   new_tile_value });
+	}
+
+	fn clear_source_and_set_target(&mut self, tile_value: TileValue) {
+		self.board.put(self.target, Value(tile_value));
+		self.board.put(self.source, Empty);
+		self.target_changed = true;
 	}
 
 	fn push_unchanged_target(&mut self) {
