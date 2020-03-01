@@ -59,14 +59,14 @@ impl<'a> DualCursor<'a> {
 		}
 	}
 
-	pub fn move_tile(&mut self, tile_value: TileValue) -> () {
+	pub fn move_tile(&mut self, tile_value: TileValue) {
 		self.board.put(self.target, Value(tile_value));
 		self.board.put(self.source, Empty);
 		self.target_changed = true;
 		self.moves.push(Move::Shift { from: self.source, to: self.target, value: tile_value });
 	}
 
-	pub fn merge_tiles(&mut self, old_tile_value: TileValue, new_tile_value: TileValue) -> () {
+	pub fn merge_tiles(&mut self, old_tile_value: TileValue, new_tile_value: TileValue) {
 		self.board.put(self.target, Value(new_tile_value));
 		self.board.put(self.source, Empty);
 		self.target_changed = true;
@@ -76,7 +76,7 @@ impl<'a> DualCursor<'a> {
 		                              end_value:   new_tile_value });
 	}
 
-	fn push_unchanged_target(&mut self) -> () {
+	fn push_unchanged_target(&mut self) {
 		if !self.target_changed {
 			if let Value(target_value) = self.board.at(self.target) {
 				self.moves.push(Move::Stay { at: self.target, value: target_value });
