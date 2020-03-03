@@ -4,6 +4,7 @@ use super::merger::Merger;
 use super::r#move::Move;
 use super::{Square, Square::*};
 use rand::{distributions::IndependentSample, Rng};
+use std::cell::UnsafeCell;
 
 type XYGrid = Vec<Vec<Square>>;
 
@@ -56,21 +57,13 @@ impl Board {
 
 	fn ten_percent_chance(&mut self) -> bool { self.rand_range_10.ind_sample(&mut self.rng) == 0 }
 
-	pub fn shift_left(&mut self) -> Option<Vec<Move>> {
-		self.contract_multi((0..=self.max_y).map(|y| self.coord(0, y)).collect(), Vector::new(1, 0))
-	}
+	pub fn shift_left(&mut self) -> Option<Vec<Move>> { self.contract_multi(Vector::new(1, 0)) }
 
-	pub fn shift_right(&mut self) -> Option<Vec<Move>> {
-		self.contract_multi((0..=self.max_y).map(|y| self.coord(self.max_x, y)).collect(), Vector::new(-1, 0))
-	}
+	pub fn shift_right(&mut self) -> Option<Vec<Move>> { self.contract_multi(Vector::new(-1, 0)) }
 
-	pub fn shift_down(&mut self) -> Option<Vec<Move>> {
-		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, self.max_y)).collect(), Vector::new(0, -1))
-	}
+	pub fn shift_down(&mut self) -> Option<Vec<Move>> { self.contract_multi(Vector::new(0, -1)) }
 
-	pub fn shift_up(&mut self) -> Option<Vec<Move>> {
-		self.contract_multi((0..=self.max_x).map(|x| self.coord(x, 0)).collect(), Vector::new(0, 1))
-	}
+	pub fn shift_up(&mut self) -> Option<Vec<Move>> { self.contract_multi(Vector::new(0, 1)) }
 
 	fn empty_grid(size_x: usize, size_y: usize) -> XYGrid { vec![vec![Square::Empty; size_y]; size_x] }
 
@@ -101,12 +94,31 @@ impl Board {
 		panic!(); // n > self.num_free_tiles()
 	}
 
-	fn contract_multi(&mut self, starts: Vec<Coord>, direction: Vector) -> Option<Vec<Move>> {
+	fn slice_in_direction<'a>(&'a mut self, direction: Vector) -> Vec<DualCursor<'a>> {
+		let start_coords: Vec<Coord> = match direction {
+			Vector { dx: 1, dy: 0 } => (0..=self.max_y).map(|y| self.coord(0, y)).collect(),
+			Vector { dx: -1, dy: 0 } => (0..=self.max_y).map(|y| self.coord(self.max_x, y)).collect(),
+			Vector { dx: 0, dy: 1 } => (0..=self.max_x).map(|x| self.coord(x, 0)).collect(),
+			Vector { dx: 0, dy: -1 } => (0..=self.max_x).map(|x| self.coord(x, self.max_y)).collect(),
+			_ => panic!()
+		};
+		let mut cursors = Vec::with_capacity(start_coords.len());
+		let unsafe_board: UnsafeCell<&mut Board> = UnsafeCell::new(self);
+		unsafe {
+			// start_coords.into_iter().map(|start_coord|DualCursor::new(*unsafe_board.
+			// get(), start_coord, direction)).collect() as Vec<DualCursor<'a>>
+			for start_coord in start_coords {
+				cursors.push(DualCursor::new(*unsafe_board.get(), start_coord, direction));
+			}
+		}
+		cursors
+	}
+
+	fn contract_multi(&mut self, direction: Vector) -> Option<Vec<Move>> {
 		let mut moves = Vec::with_capacity(self.size_x() * self.size_y());
-		for start_coord in starts {
-			let cursor = DualCursor::new(self, start_coord, direction);
-			let merger = Merger::new(cursor);
-			let mut cursor_moves = merger.merge();
+		let cursors = self.slice_in_direction(direction);
+		for cursor in cursors {
+			let mut cursor_moves = Merger::new(cursor).merge();
 			moves.append(&mut cursor_moves);
 		}
 		// Return moves only if there are any _real_ moves:
