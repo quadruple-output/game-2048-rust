@@ -1,4 +1,4 @@
-use super::_board::Board;
+use super::board::Board;
 use super::coord::{Coord, Vector};
 use super::r#move::Move;
 use super::{Square::*, *};

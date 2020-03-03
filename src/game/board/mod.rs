@@ -1,4 +1,4 @@
-mod _board;
+mod board;
 mod coord;
 mod cursor;
 mod merger;
@@ -6,7 +6,7 @@ mod r#move;
 #[cfg(test)]
 mod test;
 
-pub use _board::Board;
+pub use board::Board;
 pub use coord::Coord;
 pub use r#move::Move;
 
