@@ -52,8 +52,8 @@ fn main() {
 		                .init()
 		                .unwrap();
 		if let Some(view_type) = match args.value_of(ARG_VIEW_TYPE) {
-			None | Some("ncurses") => Some(ViewType::NCurses),
-			Some("console") => Some(ViewType::Console),
+			None | Some("console") => Some(ViewType::Console),
+			Some("ncurses") => Some(ViewType::NCurses),
 			Some(other) => {
 				println!("Unknown display type \"{}\". Try -l.", other);
 				None
