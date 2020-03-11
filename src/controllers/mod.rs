@@ -10,21 +10,21 @@ mod console;
 mod ncurses;
 
 pub trait Controller {
-	fn receive_command(&self) -> Command;
+  fn receive_command(&self) -> Command;
 
-	fn view(&self) -> &dyn View;
+  fn view(&self) -> &dyn View;
 
-	fn game(&self) -> Ref<Game>;
+  fn game(&self) -> Ref<Game>;
 
-	fn mut_game(&self) -> RefMut<Game>;
+  fn mut_game(&self) -> RefMut<Game>;
 
-	fn run_game(&self) {
-		loop {
-			self.view().update();
-			self.mut_game().execute(self.receive_command());
-			if let GameState::Quit = self.game().state() {
-				break;
-			}
-		}
-	}
+  fn run_game(&self) {
+    loop {
+      self.view().update();
+      self.mut_game().execute(self.receive_command());
+      if let GameState::Quit = self.game().state() {
+        break;
+      }
+    }
+  }
 }

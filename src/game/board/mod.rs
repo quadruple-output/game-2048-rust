@@ -16,6 +16,6 @@ pub type TileValue = u16;
 #[derive(Debug)] // only needed for console view. TODO: remove or define in views/console.rs, if possible
 #[derive(PartialEq)] // needed for tests
 pub enum Square {
-	Empty,
-	Value(TileValue)
+  Empty,
+  Value(TileValue)
 }
