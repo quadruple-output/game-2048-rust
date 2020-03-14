@@ -1,5 +1,6 @@
 use console::Key;
 use std::cell::{Ref, RefCell, RefMut};
+use std::io;
 
 use super::Controller;
 use crate::game::{Command, Game};
@@ -28,8 +29,26 @@ impl<'a> Controller for ConsoleController<'a> {
       match self.view.term().read_key() {
         Ok(key) => match key {
           Key::Unknown => {
-            println!("Cannot read (raw) from Keyboard");
-            break Command::Quit;
+            // terminal appears not to be "user attended". Unfortunately, this is the case
+            // for the Eclipse console.
+            let mut line = String::new();
+            match io::stdin().read_line(&mut line) {
+              Ok(_) => {
+                match line.to_lowercase().as_str().trim() {
+                  "w" => break Command::Up,
+                  "a" => break Command::Left,
+                  "s" => break Command::Down,
+                  "d" => break Command::Right,
+                  "n" => break Command::New,
+                  "q" => break Command::Quit,
+                  _ => println!("try W, A, S, D, N(ew), or Q(uit)") // restarts the loop
+                }
+              },
+              Err(msg) => {
+                println!("I/O Error on STDIN: {}", msg);
+                break Command::Quit;
+              }
+            }
           },
           Key::ArrowUp => break Command::Up,
           Key::ArrowLeft => break Command::Left,
@@ -37,7 +56,7 @@ impl<'a> Controller for ConsoleController<'a> {
           Key::ArrowRight => break Command::Right,
           Key::Char('n') => break Command::New,
           Key::Char('q') => break Command::Quit,
-          _ => println!("try arrow keys, N, or Q") // restarts the loop
+          _ => println!("try arrow keys, N(ew), or Q(uit)") // restarts the loop
         },
         Err(msg) => {
           println!("I/O Error on STDIN: {}", msg);
