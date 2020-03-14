@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 clap = "2.33"
+console = "0.10.0"
 log = "0.4.8"
 ncurses = "5"
 rand = "0.4"

@@ -4,7 +4,7 @@ use crate::game::{Command, Game, GameState};
 use crate::views::View;
 
 pub use self::ncurses::NCursesController;
-pub use console::ConsoleController;
+pub use self::console::ConsoleController;
 
 mod console;
 mod ncurses;
