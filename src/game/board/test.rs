@@ -78,12 +78,24 @@ fn shift(column: [u16; 4]) -> [u16; 4] {
 
 fn first_column_from_board(board: Board) -> [u16; 4] {
   let mut result = [0, 0, 0, 0];
-  for y in 0..board.size_y() {
-    result[y] = match board.at_xy(0, y) {
+  for (y, square_value) in result.iter_mut().enumerate() {
+    *square_value = match board.at_xy(0, y) {
       Square::Empty => 0,
       Square::Value(val) => val
     };
   }
+  // The code below yields this clippy warning:
+  //
+  // the loop variable `y` is used to index `result`
+  // note: `#[warn(clippy::needless_range_loop)]` on by default
+  // help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+  //
+  //  for y in 0..board.size_y() {
+  //    result[y] = match board.at_xy(0, y) {
+  //      Square::Empty => 0,
+  //      Square::Value(val) => val
+  //    };
+  //  }
   result
 }
 
