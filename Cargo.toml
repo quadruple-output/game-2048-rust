@@ -13,3 +13,4 @@ log = "0.4.8"
 ncurses = "5"
 rand = "0.4"
 stderrlog = "0.4.3"
+crossbeam = "0.7" # crossbeam::scope - for spawning threads that borrow local variables from the stack.
