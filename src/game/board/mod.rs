@@ -27,39 +27,49 @@ pub enum Square {
 
 type XYGrid = Vec<Vec<Square>>;
 
-#[derive(Clone, Debug)]
-pub struct Board {
-  max_x:         usize, // used as array index -> must be typed 'usize'
-  max_y:         usize, // used as array index -> must be typed 'usize'
-  grid:          XYGrid,
+pub struct Randomizer {
   rand_range_10: rand::distributions::Range<u8>,
   rng:           rand::ThreadRng
 }
 
+impl Randomizer {
+  pub fn new() -> Self {
+    Randomizer { rand_range_10: rand::distributions::Range::new(0, 10), rng: rand::thread_rng() }
+  }
+
+  fn ten_percent_chance(&mut self) -> bool { self.rand_range_10.ind_sample(&mut self.rng) == 0 }
+
+  fn gen_int_less_than(&mut self, upper_bound: usize) -> usize { self.rng.gen_range(0, upper_bound) }
+}
+
+
+#[derive(Clone, Debug)]
+pub struct Board {
+  max_x: usize, // used as array index -> must be typed 'usize'
+  max_y: usize, // used as array index -> must be typed 'usize'
+  grid:  XYGrid
+}
+
 impl Board {
   pub fn new(size_x: usize, size_y: usize) -> Self {
-    Board { max_x:         size_x - 1,
-            max_y:         size_y - 1,
-            grid:          Self::empty_grid(size_x, size_y),
-            rand_range_10: rand::distributions::Range::new(0, 10),
-            rng:           rand::thread_rng() }
+    Board { max_x: size_x - 1, max_y: size_y - 1, grid: Self::empty_grid(size_x, size_y) }
   }
 
   pub fn coord(&self, x: usize, y: usize) -> Coord { Coord::new(x, y, self.max_x, self.max_y) }
 
-  pub fn initialize(&mut self) -> Move {
+  pub fn initialize(&mut self, randomizer: &mut Randomizer) -> Move {
     self.grid = Self::empty_grid(self.size_x(), self.size_y());
-    self.new_tile()
+    self.new_tile(randomizer)
   }
 
-  pub fn new_tile(&mut self) -> Move {
+  pub fn new_tile(&mut self, randomizer: &mut Randomizer) -> Move {
     let num_free_tiles = self.num_free_tiles();
     if num_free_tiles == 0 {
       panic!("tried to place a new tile on a full board")
     };
-    let n = self.rng.gen_range(0, num_free_tiles);
+    let n = randomizer.gen_int_less_than(num_free_tiles);
     let rnd_free_coord = self.find_free_tile(n);
-    let new_value = if self.ten_percent_chance() { 4 } else { 2 };
+    let new_value = if randomizer.ten_percent_chance() { 4 } else { 2 };
     self.put(rnd_free_coord, Value(new_value));
     Move::Appear { at: rnd_free_coord, value: new_value }
   }
@@ -73,8 +83,6 @@ impl Board {
   pub fn at_xy(&self, x: usize, y: usize) -> Square { self.grid[x][y] }
 
   pub fn put(&mut self, coord: Coord, square: Square) { self.grid[coord.x][coord.y] = square; }
-
-  fn ten_percent_chance(&mut self) -> bool { self.rand_range_10.ind_sample(&mut self.rng) == 0 }
 
   pub fn shift_left(&mut self) -> Option<Vec<Move>> { self.contract_multi(Vector::new(1, 0)) }
 

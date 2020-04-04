@@ -1,6 +1,6 @@
 mod board;
 
-pub use board::{Board, Coord, Move, Square};
+pub use board::{Board, Coord, Move, Randomizer, Square};
 use log::info;
 
 #[derive(Debug)]
@@ -22,6 +22,7 @@ pub enum GameState {
 
 pub struct Game {
   pub board:    Board,
+  randomizer:   Randomizer,
   state:        GameState,
   latest_moves: Vec<Move>,
   move_count:   usize
@@ -31,6 +32,7 @@ impl Game {
   pub fn new(size_x: usize, size_y: usize) -> Game {
     let mut new_game = Game { state:        GameState::Running,
                               board:        Board::new(size_x, size_y),
+                              randomizer:   Randomizer::new(),
                               latest_moves: Vec::new(),
                               move_count:   0 };
     new_game.execute(Command::New);
@@ -66,12 +68,12 @@ impl Game {
 
   pub fn move_count(&self) -> usize { self.move_count }
 
-  fn restart(&mut self) -> Move { self.board.initialize() }
+  fn restart(&mut self) -> Move { self.board.initialize(&mut self.randomizer) }
 
   fn shift_left(&mut self) -> Option<Vec<Move>> {
     match self.board.shift_left() {
       Some(mut moves) => {
-        moves.push(self.board.new_tile());
+        moves.push(self.board.new_tile(&mut self.randomizer));
         Some(moves)
       },
       None => None
@@ -81,7 +83,7 @@ impl Game {
   fn shift_right(&mut self) -> Option<Vec<Move>> {
     match self.board.shift_right() {
       Some(mut moves) => {
-        moves.push(self.board.new_tile());
+        moves.push(self.board.new_tile(&mut self.randomizer));
         Some(moves)
       },
       None => None
@@ -91,7 +93,7 @@ impl Game {
   fn shift_up(&mut self) -> Option<Vec<Move>> {
     match self.board.shift_up() {
       Some(mut moves) => {
-        moves.push(self.board.new_tile());
+        moves.push(self.board.new_tile(&mut self.randomizer));
         Some(moves)
       },
       None => None
@@ -101,7 +103,7 @@ impl Game {
   fn shift_down(&mut self) -> Option<Vec<Move>> {
     match self.board.shift_down() {
       Some(mut moves) => {
-        moves.push(self.board.new_tile());
+        moves.push(self.board.new_tile(&mut self.randomizer));
         Some(moves)
       },
       None => None
