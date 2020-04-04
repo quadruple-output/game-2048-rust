@@ -130,16 +130,12 @@ impl Board {
       Vector { dx: 0, dy: -1 } => (0..=self.max_x).map(|x| self.coord(x, self.max_y)).collect(),
       _ => panic!()
     };
-    let mut cursors = Vec::with_capacity(start_coords.len());
     let unsafe_board: UnsafeCell<&mut Board> = UnsafeCell::new(self);
     unsafe {
-      // start_coords.into_iter().map(|start_coord|DualCursor::new(*unsafe_board.
-      // get(), start_coord, direction)).collect() as Vec<DualCursor<'a>>
-      for start_coord in start_coords {
-        cursors.push(DualCursor::new(*unsafe_board.get(), start_coord, direction));
-      }
+      start_coords.into_iter()
+                  .map(|start_coord| DualCursor::new(*unsafe_board.get(), start_coord, direction))
+                  .collect()
     }
-    cursors
   }
 
   fn contract_multi(&mut self, direction: Vector) -> Option<Vec<Move>> {
