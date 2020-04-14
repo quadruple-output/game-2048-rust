@@ -1,7 +1,13 @@
 List of concepts used in this example program:
 
-– library (lib.rs) with main.rs
-– ?-Operator: merger.rs
-– closures: animator.rs
-– non-ascii identifier: animator.rs
-– unsafe rust (for something similar to split_at_mut()): board.rs
+– project structure: library (lib.rs) with main.rs and some modules (module ~= Class?)
+– rustfmt options
+– interesting libraries used: clap, ncurses (WTF!), stderrlog, crossbeam
+– ?-Operator (merger.rs)
+– closures (animator.rs)
+– MVC model with (at least one) Trait _Object_
+– some use (or non-use) of iterators (board/mod.rs)
+– gimmik: non-ascii identifier (animator.rs)
+– unsafe rust (for feature comparable to split_at_mut()) (board.rs)
+– threads (with crossbeam; mention explicit drop())
+– editors used: VS Code, Eclipse
