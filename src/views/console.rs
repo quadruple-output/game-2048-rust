@@ -1,13 +1,15 @@
-use ::console::Term;
-use ::std::cell::RefCell;
+use console::Term;
+use std::cell::RefCell;
 
 use super::View;
 use crate::game::{Board, Game, Square};
+
 
 pub struct ConsoleView<'a> {
   game: &'a RefCell<Game>,
   term: Term
 }
+
 
 impl<'a> View for ConsoleView<'a> {
   fn update(&self) { self.show_board(&self.game.borrow().board); }
@@ -36,6 +38,7 @@ impl<'a> ConsoleView<'a> {
     }
   }
 }
+
 
 impl<'a> Drop for ConsoleView<'a> {
   fn drop(&mut self) { self.term.set_title(""); }
