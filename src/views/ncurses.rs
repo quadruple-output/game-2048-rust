@@ -1,4 +1,5 @@
 mod animator;
+mod ncwindow;
 mod pallete;
 mod view;
 
