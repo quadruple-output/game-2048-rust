@@ -2,8 +2,8 @@ use log::trace;
 use ncurses as nc;
 use std::fmt;
 
-pub struct NCWindow(pub nc::WINDOW, // "Newtype" wrapper pattern for implementing Drop for nc::WINDOW
-                    String          /* just a label for debugging – no functionality */);
+// "Newtype" wrapper pattern for implementing Drop for nc::WINDOW
+pub struct NCWindow(pub nc::WINDOW, String /* just a label for debugging – no functionality */);
 
 
 impl NCWindow {
