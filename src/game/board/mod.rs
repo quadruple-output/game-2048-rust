@@ -139,23 +139,20 @@ impl Board {
   }
 
   fn contract_multi(&mut self, direction: Vector) -> Option<Vec<Move>> {
-    let moves: Vec<Move> = crossbeam::scope(|scope| {
-                             let (tx_clone_source, receiver) = mpsc::channel();
-                             let cursors = self.slice_in_direction(direction);
-                             for cursor in cursors {
-                               let transmitter = tx_clone_source.clone();
-                               scope.spawn(move |_| {
-                                      let my_moves = Merger::new(cursor).merge();
-                                      for mv in my_moves {
-                                        transmitter.send(mv).unwrap();
-                                      }
-                                    });
-                             }
-                             // the next FOR loop only ends when all transmitters of the channel have been
-                             // dropped, so we have to drop the clone source:
-                             drop(tx_clone_source);
-                             receiver.into_iter().collect()
-                           }).unwrap();
+    let (tx_clone_source, receiver) = mpsc::channel();
+    crossbeam::scope(move |scope| {
+      let cursors = self.slice_in_direction(direction);
+      for cursor in cursors {
+        let transmitter = tx_clone_source.clone();
+        scope.spawn(move |_| {
+               let my_moves = Merger::new(cursor).merge();
+               for mv in my_moves {
+                 transmitter.send(mv).unwrap();
+               }
+             });
+      }
+    }).unwrap();
+    let moves: Vec<Move> = receiver.into_iter().collect();
     // Return Some(moves) only if there are any _real_ moves. Otherwise return None:
     for mv in moves.iter() {
       match mv {

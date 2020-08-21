@@ -13,6 +13,7 @@ impl<'a> View for ConsoleView<'a> {
   fn update(&self) { self.show_board(&self.game.borrow().board); }
 }
 
+
 impl<'a> ConsoleView<'a> {
   pub fn new(game: &RefCell<Game>) -> ConsoleView {
     let term = Term::stdout();

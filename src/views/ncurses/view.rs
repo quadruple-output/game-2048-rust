@@ -71,7 +71,7 @@ impl<'a> NCursesView<'a> {
     let last_shown_move = game.borrow().move_count();
     NCursesView { game,
                   pallete: Pallete::new(),
-                  animator: Animator::new(0.3, 50),
+                  animator: Animator::new(0.6, 50),
                   last_shown_move: Cell::new(last_shown_move),
                   stdscr: NCWindow::new(None, nc::stdscr(), "stdscr") }
   }
@@ -127,7 +127,7 @@ impl<'a> NCursesView<'a> {
     let game = self.game.borrow();
     let t_appear = 0.6; // new tiles appear at this fraction of t_global
     let t_move = (t_global / t_appear).min(1.0); // first animation part: move tiles
-    for r#move in game.latest_moves().iter() {
+    for r#move in game.latest_moves() {
       match r#move {
         Move::Appear { at, value } => {
           let square_window = self.position_square_in(*at, *at, board_window, t_global);

@@ -64,7 +64,7 @@ impl Game {
 
   pub fn state(&self) -> &GameState { &self.state }
 
-  pub fn latest_moves(&self) -> &Vec<Move> { &self.latest_moves }
+  pub fn latest_moves(&self) -> &[Move] { &self.latest_moves }
 
   pub fn move_count(&self) -> usize { self.move_count }
 
