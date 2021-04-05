@@ -1,8 +1,23 @@
 # game-2048-rust
-The game "2048" implemented in the Rust programming language
 
-This is my study-project for learning Rust.  Feel free to give any kind of feedback on the code, or create an issue.
+The game "2048" implemented in the Rust programming language.  It runs in a
+text terminal.  For a tolerable UI experience, you should have ncurses
+installed.  Run with
 
-I happen to be new to git, as well.  Maybe you will notice…
+```
+cargo run -- -d ncurses
+```
 
-This piece of work is conceptually based on http://git.io/2048
+or
+
+```
+cargo run -- --help
+```
+
+This was my study-project for learning Rust, so don't expect too much.
+
+ 
+
+---
+
+This piece of work was inspired by http://git.io/2048
