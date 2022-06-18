@@ -18,11 +18,11 @@ use crate::views::View;
 //
 
 pub struct NCursesView<'a> {
-  game:            &'a RefCell<Game>,
-  pallete:         Pallete,
-  animator:        Animator,
+  game: &'a RefCell<Game>,
+  pallete: Pallete,
+  animator: Animator,
   last_shown_move: Cell<usize>,
-  stdscr:          NCWindow
+  stdscr: NCWindow,
 }
 
 impl<'a> View for NCursesView<'a> {
@@ -70,11 +70,13 @@ impl<'a> NCursesView<'a> {
     nc::curs_set(nc::CURSOR_VISIBILITY::CURSOR_INVISIBLE);
     nc::refresh(); // required for first wrefresh to work
     let last_shown_move = game.borrow().move_count();
-    NCursesView { game,
-                  pallete: Pallete::new(),
-                  animator: Animator::new(0.6, 50),
-                  last_shown_move: Cell::new(last_shown_move),
-                  stdscr: NCWindow::new(None, nc::stdscr(), "stdscr") }
+    NCursesView {
+      game,
+      pallete: Pallete::new(),
+      animator: Animator::new(0.6, 50),
+      last_shown_move: Cell::new(last_shown_move),
+      stdscr: NCWindow::new(None, nc::stdscr(), "stdscr"),
+    }
   }
 
   fn position_board_in(&self, window: &NCWindow) -> NCWindow {
@@ -85,25 +87,33 @@ impl<'a> NCursesView<'a> {
     // calc optimal coords for board:
     let (squares_height, squares_width) = self.calc_optimal_board_win(screen_height, screen_width);
     // re-apply room for outer box:
-    NCWindow::new(Some(window),
-                  nc::derwin(window.0,
-                             squares_height + 2 * Self::BORDER_WIDTH,
-                             squares_width + 2 * Self::BORDER_WIDTH,
-                             0,
-                             0),
-                  "board")
+    NCWindow::new(
+      Some(window),
+      nc::derwin(
+        window.0,
+        squares_height + 2 * Self::BORDER_WIDTH,
+        squares_width + 2 * Self::BORDER_WIDTH,
+        0,
+        0,
+      ),
+      "board",
+    )
   }
 
   fn boxed_subwindow(&self, window: &NCWindow) -> NCWindow {
     nc::box_(window.0, 0, 0);
     let (win_height, win_width) = window.size();
-    NCWindow::new(Some(window),
-                  nc::derwin(window.0,
-                             win_height - 2 * Self::BORDER_WIDTH,
-                             win_width - 2 * Self::BORDER_WIDTH,
-                             Self::BORDER_WIDTH,
-                             Self::BORDER_WIDTH),
-                  "boxed")
+    NCWindow::new(
+      Some(window),
+      nc::derwin(
+        window.0,
+        win_height - 2 * Self::BORDER_WIDTH,
+        win_width - 2 * Self::BORDER_WIDTH,
+        Self::BORDER_WIDTH,
+        Self::BORDER_WIDTH,
+      ),
+      "boxed",
+    )
   }
 
   fn calc_optimal_board_win(&self, max_height: i32, max_width: i32) -> (i32, i32) {
@@ -157,13 +167,14 @@ impl<'a> NCursesView<'a> {
         Move::Stay { at, value } => {
           let square_window = self.position_square_in(*at, *at, board_window, t_move);
           self.show_square_in_window(*value, &square_window);
-        }
+        },
       }
     }
   }
 
-  fn position_square_in(&self, start_coord: Coord, end_coord: Coord, board_window: &NCWindow, t: f32)
-                        -> NCWindow {
+  fn position_square_in(
+    &self, start_coord: Coord, end_coord: Coord, board_window: &NCWindow, t: f32,
+  ) -> NCWindow {
     let (win_height, win_width) = board_window.size();
     let board = &self.game.borrow().board;
     let start_top = (start_coord.y as i32 * win_height) / board.size_y() as i32;
@@ -178,16 +189,19 @@ impl<'a> NCursesView<'a> {
     let left = self.interpolate(start_left, end_left, t);
     let bottom = self.interpolate(start_bottom, end_bottom, t);
     let right = self.interpolate(start_right, end_right, t);
-    NCWindow::new(Some(board_window),
-                  nc::derwin(board_window.0, bottom - top, right - left, top, left),
-                  "tile")
+    NCWindow::new(
+      Some(board_window),
+      nc::derwin(board_window.0, bottom - top, right - left, top, left),
+      "tile",
+    )
   }
 
-  pub fn interpolate(&self, a: i32, b: i32, t: f32) -> i32 { a + (t * (b as f32 - a as f32)) as i32 }
+  pub fn interpolate(&self, a: i32, b: i32, t: f32) -> i32 {
+    a + (t * (b as f32 - a as f32)) as i32
+  }
 
   fn show_square_in_window(&self, value: u16, window: &NCWindow) {
-    let label;
-    label = if value > 0 { value.to_string() } else { String::from("?") };
+    let label = if value > 0 { value.to_string() } else { String::from("?") };
     nc::wattr_set(window.0, 0, 2);
     nc::wbkgdset(window.0, self.pallete.get_pair_for_square_value(value));
     nc::touchwin(window.0); // attempt to fix broken rendering. suggested in 'man 3x wrefresh' for window overlaps
@@ -201,7 +215,6 @@ impl<'a> NCursesView<'a> {
     nc::mvwaddstr(window.0, win_height / 2, (win_width - label.len() as i32) / 2, &label);
   }
 }
-
 
 impl<'a> Drop for NCursesView<'a> {
   fn drop(&mut self) {
